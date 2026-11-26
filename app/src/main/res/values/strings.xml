@@ -1,0 +1,14 @@
+<resources>
+    <string name="app_name">Raag EV Insurance</string>
+    <string name="brand_full_title">RAAG AUTOMOBILES – EV INSURANCE</string>
+    <string name="brand_tagline">Trusted Electric Scooter Insurance &amp; Digital Policy Portal</string>
+    <string name="customer_portal_label">Customer Portal</string>
+    <string name="admin_portal_label">Admin Portal</string>
+    <string name="sign_in_with_google">Sign in with Google</string>
+    <string name="sign_out">Sign Out</string>
+    <string name="consent_privacy_terms">I agree to the RAAG AUTOMOBILES Privacy Policy and Terms &amp; Conditions</string>
+    <string name="disclaimer_not_policy">Submitting an application or uploading payment proof does not constitute active insurance coverage until verified and officially issued by RAAG AUTOMOBILES.</string>
+    <string name="default_upi_id">9507402469-3@ibl</string>
+    <string name="default_upi_recipient">RAAG AUTOMOBILES</string>
+    <string name="default_support_mobile">9507402469</string>
+</resources>

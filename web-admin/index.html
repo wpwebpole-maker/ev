@@ -1,0 +1,1068 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RAAG AUTOMOBILES – EV Insurance Admin Panel</title>
+  <style>
+    :root {
+      --red-dark: #7A0710;
+      --red-main: #B80F1E;
+      --red-soft: #FDF2F3;
+      --gold: #F4C430;
+      --gold-soft: #FFF8DF;
+      --ink: #1F1718;
+      --muted: #6C5D60;
+      --border: #E8D9DB;
+      --bg: #FAF6F5;
+      --white: #FFFFFF;
+      --ok-bg: #E6F6EC;
+      --ok-ink: #126B39;
+      --warn-bg: #FFF4E0;
+      --warn-ink: #9A5506;
+      --err-bg: #FDECEC;
+      --err-ink: #A61B29;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+    body { background: var(--bg); color: var(--ink); min-height: 100vh; }
+    .hidden { display: none !important; }
+    .btn {
+      border: 0; border-radius: 10px; padding: 10px 16px; font-weight: 600; font-size: 14px;
+      cursor: pointer; transition: opacity .15s ease, transform .1s ease; display: inline-flex;
+      align-items: center; justify-content: center; gap: 8px;
+    }
+    .btn:active { transform: scale(.98); }
+    .btn:disabled { opacity: .5; cursor: not-allowed; }
+    .btn-primary { background: var(--red-main); color: var(--white); }
+    .btn-dark { background: var(--red-dark); color: var(--white); }
+    .btn-gold { background: var(--gold); color: var(--red-dark); }
+    .btn-outline { background: var(--white); color: var(--red-dark); border: 1.5px solid var(--border); }
+    .btn-ok { background: var(--ok-ink); color: var(--white); }
+    .btn-err { background: var(--err-ink); color: var(--white); }
+    .btn-sm { padding: 6px 11px; font-size: 12px; border-radius: 8px; }
+
+    /* Login View */
+    .login-shell {
+      min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px;
+      background: linear-gradient(155deg, var(--red-dark), var(--red-main) 55%, #47040A);
+    }
+    .login-card {
+      width: 100%; max-width: 440px; background: var(--white); border-radius: 20px;
+      padding: 28px; border: 2px solid rgba(244,196,48,.7); box-shadow: 0 20px 50px rgba(0,0,0,.35);
+      text-align: center;
+    }
+    .brand-badge {
+      width: 78px; height: 78px; margin: 0 auto 14px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--red-dark), var(--red-main));
+      border: 3px solid var(--gold); color: var(--gold); font-weight: 800; font-size: 26px;
+      display: flex; align-items: center; justify-content: center; letter-spacing: 1px;
+    }
+    .login-card h1 { font-size: 21px; color: var(--red-dark); margin-bottom: 4px; }
+    .login-card .sub { font-size: 13px; color: var(--muted); margin-bottom: 20px; line-height: 1.5; }
+    .alert {
+      border-radius: 10px; padding: 12px; font-size: 13px; text-align: left; margin-bottom: 14px; line-height: 1.45;
+    }
+    .alert-err { background: var(--err-bg); color: var(--err-ink); border: 1px solid #F5C2C7; }
+    .alert-warn { background: var(--warn-bg); color: var(--warn-ink); border: 1px solid #F7D89B; }
+    .alert-ok { background: var(--ok-bg); color: var(--ok-ink); border: 1px solid #B6E3C6; }
+
+    /* App Shell */
+    .topbar {
+      background: linear-gradient(90deg, var(--red-dark), var(--red-main), var(--red-dark));
+      color: var(--white); padding: 12px 20px; display: flex; align-items: center;
+      justify-content: space-between; gap: 12px; position: sticky; top: 0; z-index: 20;
+      border-bottom: 2px solid var(--gold);
+    }
+    .topbar-left { display: flex; align-items: center; gap: 12px; }
+    .topbar-logo {
+      width: 40px; height: 40px; border-radius: 50%; background: var(--white); color: var(--red-dark);
+      border: 2px solid var(--gold); font-weight: 800; display: flex; align-items: center; justify-content: center;
+    }
+    .topbar-title { font-weight: 800; font-size: 16px; letter-spacing: .4px; }
+    .topbar-sub { font-size: 11px; color: var(--gold); letter-spacing: 1.2px; font-weight: 600; }
+    .topbar-user { display: flex; align-items: center; gap: 10px; font-size: 13px; }
+    .role-pill {
+      background: var(--gold); color: var(--red-dark); padding: 4px 10px; border-radius: 999px;
+      font-size: 11px; font-weight: 800;
+    }
+
+    .layout { display: flex; min-height: calc(100vh - 66px); }
+    .sidebar {
+      width: 230px; background: var(--white); border-right: 1px solid var(--border);
+      padding: 16px 12px; display: flex; flex-direction: column; gap: 6px; flex-shrink: 0;
+    }
+    .nav-btn {
+      width: 100%; text-align: left; background: transparent; border: 0; padding: 11px 14px;
+      border-radius: 10px; font-size: 14px; font-weight: 600; color: var(--muted); cursor: pointer;
+    }
+    .nav-btn:hover { background: var(--red-soft); color: var(--red-dark); }
+    .nav-btn.active { background: var(--red-main); color: var(--white); }
+
+    .main { flex: 1; padding: 20px; max-width: 1260px; width: 100%; margin: 0 auto; }
+    .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(175px, 1fr)); gap: 12px; margin-bottom: 18px; }
+    .kpi {
+      background: var(--white); border: 1px solid var(--border); border-radius: 14px; padding: 16px;
+      border-top: 3px solid var(--red-main);
+    }
+    .kpi-val { font-size: 26px; font-weight: 800; color: var(--red-dark); }
+    .kpi-lbl { font-size: 12px; color: var(--muted); margin-top: 4px; font-weight: 600; }
+
+    .card {
+      background: var(--white); border: 1px solid var(--border); border-radius: 14px;
+      padding: 18px; margin-bottom: 16px;
+    }
+    .card-header { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 14px; }
+    .card-title { font-size: 17px; font-weight: 800; color: var(--red-dark); }
+
+    .controls { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 14px; }
+    input, select, textarea {
+      border: 1.5px solid var(--border); border-radius: 10px; padding: 9px 12px;
+      font-size: 14px; color: var(--ink); background: var(--white);
+    }
+    input:focus, select:focus, textarea:focus { outline: none; border-color: var(--red-main); }
+    .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; }
+    .field label { display: block; font-size: 12px; font-weight: 700; color: var(--muted); margin-bottom: 4px; }
+    .field input, .field select, .field textarea { width: 100%; }
+
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th, td { text-align: left; padding: 11px 10px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+    th { font-size: 11px; text-transform: uppercase; letter-spacing: .5px; color: var(--muted); background: #FCF8F8; }
+    .badge {
+      display: inline-block; padding: 3px 9px; border-radius: 999px; font-size: 11px; font-weight: 700;
+      background: var(--gold-soft); color: var(--red-dark); border: 1px solid rgba(244,196,48,.5);
+    }
+    .badge-ok { background: var(--ok-bg); color: var(--ok-ink); border-color: #B6E3C6; }
+    .badge-err { background: var(--err-bg); color: var(--err-ink); border-color: #F5C2C7; }
+    .badge-warn { background: var(--warn-bg); color: var(--warn-ink); border-color: #F7D89B; }
+
+    /* Modal */
+    .modal-backdrop {
+      position: fixed; inset: 0; background: rgba(20,6,8,.62); display: flex;
+      align-items: center; justify-content: center; padding: 16px; z-index: 50;
+    }
+    .modal {
+      background: var(--white); border-radius: 16px; width: 100%; max-width: 780px;
+      max-height: 90vh; overflow-y: auto; padding: 22px; border: 2px solid var(--gold);
+    }
+    .doc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 10px; margin-top: 10px; }
+    .doc-tile { border: 1px solid var(--border); border-radius: 10px; padding: 8px; background: var(--bg); }
+    .doc-tile img { width: 100%; height: 120px; object-fit: cover; border-radius: 6px; margin-top: 6px; cursor: pointer; }
+
+    .toast {
+      position: fixed; right: 20px; bottom: 20px; background: var(--red-dark); color: var(--white);
+      padding: 12px 18px; border-radius: 12px; border: 1.5px solid var(--gold);
+      box-shadow: 0 10px 30px rgba(0,0,0,.28); font-size: 13px; font-weight: 600; z-index: 100;
+    }
+
+    @media (max-width: 820px) {
+      .layout { flex-direction: column; }
+      .sidebar { width: 100%; flex-direction: row; overflow-x: auto; border-right: 0; border-bottom: 1px solid var(--border); }
+      .nav-btn { white-space: nowrap; width: auto; }
+      .topbar-user .email-text { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- LOGIN SCREEN -->
+<section id="loginView" class="login-shell">
+  <div class="login-card">
+    <div class="brand-badge">RAAG</div>
+    <h1>RAAG AUTOMOBILES</h1>
+    <p class="sub">EV INSURANCE — Authorized Web Admin Panel<br/>Connected live to Firebase Cloud Firestore</p>
+
+    <div id="configWarning" class="alert alert-warn hidden">
+      <strong>One-time Firebase Web Config required:</strong> Paste your Firebase Web <code>apiKey</code> and <code>appId</code> inside <code>FIREBASE_CONFIG</code> at the top of this file, and add <code>raagevinsurance.kesug.com</code> in Firebase Console → Authentication → Authorized domains.
+    </div>
+    <div id="loginError" class="alert alert-err hidden"></div>
+
+    <button id="googleSignInBtn" class="btn btn-primary" style="width:100%; padding:13px;">
+      Sign in with Authorized Admin Google Account
+    </button>
+
+    <p style="font-size:12px; color:var(--muted); margin-top:16px; line-height:1.5;">
+      Only verified administrator accounts authorized in Firebase Security Rules can access customer records, verify UPI payments (<code>9507402469-3@ibl</code>), or issue policies.
+    </p>
+  </div>
+</section>
+
+<!-- ADMIN DASHBOARD SHELL -->
+<section id="appView" class="hidden">
+  <header class="topbar">
+    <div class="topbar-left">
+      <div class="topbar-logo">R</div>
+      <div>
+        <div class="topbar-title">RAAG AUTOMOBILES</div>
+        <div class="topbar-sub">EV INSURANCE · WEB ADMIN</div>
+      </div>
+    </div>
+    <div class="topbar-user">
+      <span id="adminRoleBadge" class="role-pill">ADMIN</span>
+      <span id="adminEmailLabel" class="email-text"></span>
+      <button id="signOutBtn" class="btn btn-gold btn-sm">Sign Out</button>
+    </div>
+  </header>
+
+  <div class="layout">
+    <nav class="sidebar">
+      <button class="nav-btn active" data-tab="overview">Overview</button>
+      <button class="nav-btn" data-tab="applications">Applications</button>
+      <button class="nav-btn" data-tab="payments">Payments</button>
+      <button class="nav-btn" data-tab="customers">Customers</button>
+      <button class="nav-btn" data-tab="settings">Settings & UPI</button>
+      <button class="nav-btn" data-tab="staff">Admin Staff</button>
+      <button class="nav-btn" data-tab="logs">Audit Logs</button>
+    </nav>
+
+    <main class="main">
+      <!-- OVERVIEW -->
+      <div id="tab-overview" class="tab-panel">
+        <div class="kpi-grid" id="kpiGrid"></div>
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">Recent Applications</div>
+            <button class="btn btn-outline btn-sm" id="jumpAppsBtn">View All Applications</button>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Code</th><th>Customer</th><th>Mobile</th><th>Vehicle / Reg</th><th>App Status</th><th>Payment</th><th>Action</th></tr></thead>
+              <tbody id="recentAppsBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- APPLICATIONS -->
+      <div id="tab-applications" class="tab-panel hidden">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">Customer Insurance Applications</div>
+          </div>
+          <div class="controls">
+            <input id="appSearchInput" type="search" placeholder="Search name, mobile, code, reg no..." style="flex:1; min-width:220px;" />
+            <select id="appStatusFilter">
+              <option value="ALL">All Statuses</option>
+              <option value="DRAFT">DRAFT</option>
+              <option value="SUBMITTED">SUBMITTED</option>
+              <option value="UNDER_REVIEW">UNDER_REVIEW</option>
+              <option value="DOCUMENTS_REQUIRED">DOCUMENTS_REQUIRED</option>
+              <option value="PAYMENT_PENDING">PAYMENT_PENDING</option>
+              <option value="PAYMENT_VERIFICATION">PAYMENT_VERIFICATION</option>
+              <option value="APPROVED">APPROVED</option>
+              <option value="POLICY_ISSUED">POLICY_ISSUED</option>
+              <option value="REJECTED">REJECTED</option>
+            </select>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Code</th><th>Customer</th><th>Mobile</th><th>Scooty 26 / Battery</th><th>Docs</th><th>Status</th><th>Payment</th><th>Manage</th></tr></thead>
+              <tbody id="appsTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- PAYMENTS -->
+      <div id="tab-payments" class="tab-panel hidden">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">UPI Payment Verification Queue</div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>App Code</th><th>Customer</th><th>Amount</th><th>UPI ID</th><th>UTR</th><th>Status</th><th>Action</th></tr></thead>
+              <tbody id="paymentsTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- CUSTOMERS -->
+      <div id="tab-customers" class="tab-panel hidden">
+        <div class="card">
+          <div class="card-header"><div class="card-title">Registered Customers</div></div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Name</th><th>Email</th><th>Mobile</th><th>City</th><th>Status</th><th>Action</th></tr></thead>
+              <tbody id="customersTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- SETTINGS -->
+      <div id="tab-settings" class="tab-panel hidden">
+        <div class="card">
+          <div class="card-header"><div class="card-title">Global App & UPI Payment Settings (/settings/appConfig)</div></div>
+          <form id="settingsForm" class="form-grid">
+            <div class="field"><label>Business Name</label><input id="setBusinessName" required /></div>
+            <div class="field"><label>Helpline Phone</label><input id="setContactPhone" required /></div>
+            <div class="field"><label>Support Email</label><input id="setSupportEmail" type="email" /></div>
+            <div class="field"><label>Official UPI ID</label><input id="setUpiId" required /></div>
+            <div class="field"><label>UPI Recipient Name</label><input id="setUpiRecipient" required /></div>
+            <div class="field"><label>Default Amount (INR)</label><input id="setAmount" type="number" min="1" required /></div>
+            <div class="field" style="grid-column:1 / -1;"><label>Payment Instructions</label><textarea id="setInstructions" rows="3"></textarea></div>
+            <div style="grid-column:1 / -1;">
+              <button type="submit" class="btn btn-primary">Save Settings (Super Admin)</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- ADMIN STAFF -->
+      <div id="tab-staff" class="tab-panel hidden">
+        <div class="card">
+          <div class="card-header"><div class="card-title">Admin Role-Based Access Control (/admins)</div></div>
+          <form id="addAdminForm" class="form-grid" style="margin-bottom:16px;">
+            <div class="field"><label>Firebase User UID</label><input id="newAdminUid" required placeholder="Copy user UID from Customers tab" /></div>
+            <div class="field"><label>Admin Email</label><input id="newAdminEmail" type="email" required /></div>
+            <div class="field"><label>Full Name</label><input id="newAdminName" required /></div>
+            <div class="field">
+              <label>Role</label>
+              <select id="newAdminRole">
+                <option value="SUPER_ADMIN">SUPER_ADMIN</option>
+                <option value="APPLICATION_MANAGER">APPLICATION_MANAGER</option>
+                <option value="PAYMENT_MANAGER">PAYMENT_MANAGER</option>
+                <option value="DOCUMENT_MANAGER">DOCUMENT_MANAGER</option>
+              </select>
+            </div>
+            <div style="grid-column:1 / -1;"><button type="submit" class="btn btn-dark">Assign Admin Role</button></div>
+          </form>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Name</th><th>Email</th><th>UID</th><th>Role</th><th>Active</th><th>Action</th></tr></thead>
+              <tbody id="staffTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- AUDIT LOGS -->
+      <div id="tab-logs" class="tab-panel hidden">
+        <div class="card">
+          <div class="card-header"><div class="card-title">Immutable Admin Audit Logs (/adminLogs)</div></div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Time</th><th>Admin</th><th>Action</th><th>Record ID</th><th>Details</th></tr></thead>
+              <tbody id="logsTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</section>
+
+<!-- DETAIL / REVIEW MODAL -->
+<div id="modalBackdrop" class="modal-backdrop hidden">
+  <div class="modal" id="modalContent"></div>
+</div>
+
+<div id="toast" class="toast hidden"></div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-app.js";
+  import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-auth.js";
+  import {
+    getFirestore, collection, doc, getDoc, setDoc, updateDoc, deleteDoc, addDoc,
+    onSnapshot, query, orderBy, limit, serverTimestamp
+  } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-firestore.js";
+
+  // =========================================================================
+  // STEP 1: Paste your Firebase Web App credentials from Firebase Console
+  // Project Settings -> Your apps -> Add Web App (Project: gen-lang-client-0567268236)
+  // =========================================================================
+  const FIREBASE_CONFIG = {
+    apiKey: "YOUR_FIREBASE_WEB_API_KEY",
+    authDomain: "gen-lang-client-0567268236.firebaseapp.com",
+    projectId: "gen-lang-client-0567268236",
+    storageBucket: "gen-lang-client-0567268236.firebasestorage.app",
+    messagingSenderId: "411441575170",
+    appId: "YOUR_FIREBASE_WEB_APP_ID"
+  };
+
+  // Exact named Firestore database shared with the RAAG EV Insurance Android app
+  const FIRESTORE_DATABASE_ID = "ai-studio-android-raagevin-0da03710-2d77-47af-9011-584b2cbb6d98";
+
+  const BOOTSTRAPPED_SUPER_ADMINS = new Set([
+    "suchita9867@gmail.com",
+    "wpwebpole@gmail.com",
+    "vk725846@gmail.com"
+  ]);
+
+  const $ = (id) => document.getElementById(id);
+  const state = { user: null, role: null, apps: [], payments: [], users: [], admins: [], logs: [], settings: null, unsubs: [] };
+
+  function showToast(msg) {
+    const t = $("toast");
+    t.textContent = msg;
+    t.classList.remove("hidden");
+    clearTimeout(showToast._timer);
+    showToast._timer = setTimeout(() => t.classList.add("hidden"), 3600);
+  }
+
+  function clearNode(node) {
+    while (node.firstChild) node.removeChild(node.firstChild);
+  }
+
+  function el(tag, attrs = {}, text = null) {
+    const n = document.createElement(tag);
+    Object.entries(attrs).forEach(([k, v]) => {
+      if (k === "class") n.className = v;
+      else if (k === "style") n.setAttribute("style", v);
+      else if (k.startsWith("on") && typeof v === "function") n.addEventListener(k.slice(2).toLowerCase(), v);
+      else n.setAttribute(k, v);
+    });
+    if (text !== null && text !== undefined) n.textContent = String(text);
+    return n;
+  }
+
+  function badgeEl(text) {
+    let cls = "badge";
+    if (["APPROVED", "POLICY_ISSUED", "VERIFIED", "ACTIVE"].includes(text)) cls += " badge-ok";
+    else if (["REJECTED", "DISABLED"].includes(text)) cls += " badge-err";
+    else if (["PENDING_VERIFICATION", "PAYMENT_VERIFICATION", "DOCUMENTS_REQUIRED"].includes(text)) cls += " badge-warn";
+    return el("span", { class: cls }, text);
+  }
+
+  function formatTs(ts) {
+    if (!ts) return "—";
+    try {
+      const d = typeof ts.toDate === "function" ? ts.toDate() : new Date(ts);
+      return d.toLocaleString();
+    } catch { return "—"; }
+  }
+
+  const isConfigured = !FIREBASE_CONFIG.apiKey.startsWith("YOUR_") && !FIREBASE_CONFIG.appId.startsWith("YOUR_");
+  if (!isConfigured) {
+    $("configWarning").classList.remove("hidden");
+    $("googleSignInBtn").disabled = true;
+  }
+
+  let auth = null;
+  let db = null;
+
+  if (isConfigured) {
+    const app = initializeApp(FIREBASE_CONFIG);
+    auth = getAuth(app);
+    db = getFirestore(app, FIRESTORE_DATABASE_ID);
+
+    $("googleSignInBtn").addEventListener("click", async () => {
+      $("loginError").classList.add("hidden");
+      try {
+        await signInWithPopup(auth, new GoogleAuthProvider());
+      } catch (err) {
+        $("loginError").textContent = err.message || "Google Sign-In failed.";
+        $("loginError").classList.remove("hidden");
+      }
+    });
+
+    $("signOutBtn").addEventListener("click", async () => {
+      stopListeners();
+      await signOut(auth);
+    });
+
+    onAuthStateChanged(auth, async (user) => {
+      stopListeners();
+      if (!user) {
+        state.user = null;
+        state.role = null;
+        $("appView").classList.add("hidden");
+        $("loginView").classList.remove("hidden");
+        return;
+      }
+
+      const emailLower = (user.email || "").trim().toLowerCase();
+      let resolvedRole = null;
+      if (BOOTSTRAPPED_SUPER_ADMINS.has(emailLower) && user.emailVerified) {
+        resolvedRole = "SUPER_ADMIN";
+      } else {
+        try {
+          const snap = await getDoc(doc(db, "admins", user.uid));
+          if (snap.exists() && snap.data().active === true) {
+            resolvedRole = snap.data().role || "APPLICATION_MANAGER";
+          }
+        } catch (e) {
+          console.warn("Admin verification check failed", e);
+        }
+      }
+
+      if (!resolvedRole) {
+        $("loginError").textContent = `Access Denied: ${user.email || "This account"} is not an authorized RAAG AUTOMOBILES administrator.`;
+        $("loginError").classList.remove("hidden");
+        await signOut(auth);
+        return;
+      }
+
+      state.user = user;
+      state.role = resolvedRole;
+      $("adminEmailLabel").textContent = user.email || "";
+      $("adminRoleBadge").textContent = resolvedRole;
+      $("loginView").classList.add("hidden");
+      $("appView").classList.remove("hidden");
+      startListeners();
+    });
+  }
+
+  function stopListeners() {
+    state.unsubs.forEach((fn) => { try { fn(); } catch {} });
+    state.unsubs = [];
+  }
+
+  async function writeAuditLog(action, recordId, details) {
+    if (!db || !state.user) return;
+    await addDoc(collection(db, "adminLogs"), {
+      adminUid: state.user.uid,
+      adminEmail: state.user.email || "admin",
+      action,
+      recordId,
+      details: details.slice(0, 480),
+      createdAt: serverTimestamp()
+    });
+  }
+
+  async function notifyCustomer(recipientUid, title, message, type, relatedId) {
+    if (!db || !recipientUid) return;
+    await addDoc(collection(db, "notifications"), {
+      recipientUid,
+      title: title.slice(0, 130),
+      message: message.slice(0, 580),
+      type,
+      relatedId: relatedId || "",
+      read: false,
+      createdAt: serverTimestamp()
+    });
+  }
+
+  function startListeners() {
+    state.unsubs.push(
+      onSnapshot(query(collection(db, "applications"), orderBy("updatedAt", "desc"), limit(200)), (snap) => {
+        state.apps = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+        renderOverview();
+        renderApplications();
+      })
+    );
+    state.unsubs.push(
+      onSnapshot(query(collection(db, "payments"), orderBy("createdAt", "desc"), limit(200)), (snap) => {
+        state.payments = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+        renderOverview();
+        renderPayments();
+      })
+    );
+    state.unsubs.push(
+      onSnapshot(query(collection(db, "users"), orderBy("createdAt", "desc"), limit(200)), (snap) => {
+        state.users = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+        renderCustomers();
+      })
+    );
+    state.unsubs.push(
+      onSnapshot(collection(db, "admins"), (snap) => {
+        state.admins = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+        renderStaff();
+      })
+    );
+    state.unsubs.push(
+      onSnapshot(query(collection(db, "adminLogs"), orderBy("createdAt", "desc"), limit(150)), (snap) => {
+        state.logs = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+        renderLogs();
+      })
+    );
+    state.unsubs.push(
+      onSnapshot(doc(db, "settings", "appConfig"), (snap) => {
+        state.settings = snap.exists() ? snap.data() : {
+          businessName: "RAAG AUTOMOBILES – EV INSURANCE",
+          contactPhone: "9507402469",
+          supportEmail: "suchita9867@gmail.com",
+          upiId: "9507402469-3@ibl",
+          upiRecipientName: "RAAG AUTOMOBILES",
+          defaultAmount: 4500,
+          paymentInstructions: "Scan the official RAAG AUTOMOBILES UPI QR (9507402469-3@ibl) to pay ₹4,500 and upload screenshot for manual Admin verification."
+        };
+        populateSettingsForm();
+      })
+    );
+  }
+
+  function renderOverview() {
+    const grid = $("kpiGrid");
+    clearNode(grid);
+    const total = state.apps.length;
+    const pendingReview = state.apps.filter((a) => ["SUBMITTED", "UNDER_REVIEW", "DOCUMENTS_REQUIRED", "PAYMENT_PENDING", "PAYMENT_VERIFICATION"].includes(a.applicationStatus)).length;
+    const pendingPay = state.payments.filter((p) => p.paymentStatus === "PENDING_VERIFICATION").length;
+    const issued = state.apps.filter((a) => a.applicationStatus === "POLICY_ISSUED").length;
+    const verifiedRevenue = state.payments.filter((p) => p.paymentStatus === "VERIFIED").reduce((s, p) => s + Number(p.amount || 0), 0);
+
+    [
+      ["Total Applications", total],
+      ["Pending Review", pendingReview],
+      ["Pending Payments", pendingPay],
+      ["Policies Issued", issued],
+      ["Verified Revenue", `₹${verifiedRevenue.toLocaleString("en-IN")}`]
+    ].forEach(([lbl, val]) => {
+      const card = el("div", { class: "kpi" });
+      card.append(el("div", { class: "kpi-val" }, val), el("div", { class: "kpi-lbl" }, lbl));
+      grid.append(card);
+    });
+
+    const tbody = $("recentAppsBody");
+    clearNode(tbody);
+    state.apps.slice(0, 8).forEach((a) => {
+      const tr = el("tr");
+      tr.append(
+        el("td", {}, a.applicationCode || a.id),
+        el("td", {}, a.fullName || "—"),
+        el("td", {}, a.mobile || "—"),
+        el("td", {}, a.registrationNumber || a.vehicleModel || "—"),
+        (() => { const td = el("td"); td.append(badgeEl(a.applicationStatus || "DRAFT")); return td; })(),
+        (() => { const td = el("td"); td.append(badgeEl(a.paymentStatus || "UNPAID")); return td; })(),
+        (() => {
+          const td = el("td");
+          td.append(el("button", { class: "btn btn-outline btn-sm", onClick: () => openApplicationModal(a) }, "Review"));
+          return td;
+        })()
+      );
+      tbody.append(tr);
+    });
+  }
+
+  function renderApplications() {
+    const q = ($("appSearchInput").value || "").trim().toLowerCase();
+    const st = $("appStatusFilter").value;
+    const tbody = $("appsTableBody");
+    clearNode(tbody);
+
+    state.apps.filter((a) => {
+      const matchStatus = st === "ALL" || a.applicationStatus === st;
+      const matchQ = !q ||
+        (a.fullName || "").toLowerCase().includes(q) ||
+        (a.mobile || "").toLowerCase().includes(q) ||
+        (a.applicationCode || "").toLowerCase().includes(q) ||
+        (a.registrationNumber || "").toLowerCase().includes(q);
+      return matchStatus && matchQ;
+    }).forEach((a) => {
+      const docCount = a.documentIds ? Object.keys(a.documentIds).length : 0;
+      const tr = el("tr");
+      tr.append(
+        el("td", {}, a.applicationCode || a.id),
+        el("td", {}, a.fullName || "—"),
+        el("td", {}, a.mobile || "—"),
+        el("td", {}, `${a.registrationNumber || "—"} / ${a.batteryNumber || "—"}`),
+        el("td", {}, `${docCount} files`),
+        (() => { const td = el("td"); td.append(badgeEl(a.applicationStatus || "DRAFT")); return td; })(),
+        (() => { const td = el("td"); td.append(badgeEl(a.paymentStatus || "UNPAID")); return td; })(),
+        (() => {
+          const td = el("td");
+          td.append(el("button", { class: "btn btn-primary btn-sm", onClick: () => openApplicationModal(a) }, "Manage"));
+          return td;
+        })()
+      );
+      tbody.append(tr);
+    });
+  }
+
+  async function openApplicationModal(app) {
+    const modal = $("modalContent");
+    clearNode(modal);
+
+    const header = el("div", { class: "card-header" });
+    header.append(
+      el("div", { class: "card-title" }, `${app.applicationCode} — ${app.fullName}`),
+      el("button", { class: "btn btn-outline btn-sm", onClick: closeModal }, "Close")
+    );
+    modal.append(header);
+
+    const info = el("div", { style: "font-size:13px; line-height:1.7; margin-bottom:14px; background:#FAF6F5; padding:12px; border-radius:10px; border:1px solid var(--border);" });
+    [
+      `Mobile: ${app.mobile || "—"}  |  Email: ${app.email || "—"}`,
+      `Address: ${app.address || "—"}, ${app.city || ""} ${app.pinCode || ""}`,
+      `Vehicle: ${app.vehicleBrand || "—"} ${app.vehicleModel || ""}  |  26/Reg No: ${app.registrationNumber || "—"}`,
+      `Battery No: ${app.batteryNumber || "—"}  |  Notes: ${app.vehicleNotes || "—"}`,
+      `Policy No: ${app.policyNumber || "Not issued yet"}`
+    ].forEach((line) => info.append(el("div", {}, line)));
+    modal.append(info);
+
+    // Status Update Form
+    const statusSel = el("select", { style: "width:100%;" });
+    ["DRAFT","SUBMITTED","UNDER_REVIEW","DOCUMENTS_REQUIRED","PAYMENT_PENDING","PAYMENT_VERIFICATION","APPROVED","POLICY_ISSUED","REJECTED"]
+      .forEach((s) => {
+        const opt = el("option", { value: s }, s);
+        if (s === app.applicationStatus) opt.selected = true;
+        statusSel.append(opt);
+      });
+    const remarksInput = el("textarea", { rows: "2", style: "width:100%;", placeholder: "Admin remarks visible to customer..." }, app.adminRemarks || "");
+    const statusBox = el("div", { class: "form-grid", style: "margin-bottom:14px;" });
+    const f1 = el("div", { class: "field" }); f1.append(el("label", {}, "Application Status"), statusSel);
+    const f2 = el("div", { class: "field" }); f2.append(el("label", {}, "Admin Remarks"), remarksInput);
+    statusBox.append(f1, f2);
+    modal.append(statusBox);
+
+    modal.append(el("button", {
+      class: "btn btn-primary btn-sm",
+      style: "margin-bottom:16px;",
+      onClick: async () => {
+        try {
+          const nextStatus = statusSel.value;
+          const nextRemarks = remarksInput.value.trim();
+          await updateDoc(doc(db, "applications", app.id), {
+            applicationStatus: nextStatus,
+            adminRemarks: nextRemarks,
+            updatedAt: serverTimestamp()
+          });
+          await notifyCustomer(app.customerUid, `Application ${app.applicationCode} Updated`, `Status changed to ${nextStatus}. ${nextRemarks}`, "STATUS_UPDATE", app.id);
+          await writeAuditLog("UPDATE_APPLICATION_STATUS", app.id, `${app.applicationCode} -> ${nextStatus}`);
+          showToast(`Application ${app.applicationCode} updated to ${nextStatus}`);
+          closeModal();
+        } catch (e) { showToast(`Error: ${e.message}`); }
+      }
+    }, "Save Status & Notify Customer"));
+
+    // Issue Policy PDF Section
+    const policyCard = el("div", { style: "border-top:1px solid var(--border); padding-top:14px; margin-bottom:14px;" });
+    policyCard.append(el("div", { style: "font-weight:700; color:var(--red-dark); margin-bottom:8px;" }, "Issue Official Insurance Policy PDF (Max 320KB)"));
+    const policyNumInput = el("input", { placeholder: "Policy Number (e.g. RAAG-EV-2026-001)", value: app.policyNumber || "", style: "width:100%; margin-bottom:8px;" });
+    const policyFileInput = el("input", { type: "file", accept: "application/pdf", style: "width:100%; margin-bottom:8px;" });
+    policyCard.append(policyNumInput, policyFileInput, el("button", {
+      class: "btn btn-ok btn-sm",
+      onClick: async () => {
+        const policyNumber = policyNumInput.value.trim();
+        const file = policyFileInput.files && policyFileInput.files[0];
+        if (!policyNumber || !file) { showToast("Enter policy number and select a PDF file."); return; }
+        if (file.size > 320 * 1024) { showToast("PDF must be under 320 KB for Firestore storage."); return; }
+        const base64 = await fileToBase64(file);
+        try {
+          const docRef = await addDoc(collection(db, "applicationDocs"), {
+            customerUid: app.customerUid,
+            applicationId: app.id,
+            docType: "POLICY_PDF",
+            fileName: file.name.slice(0, 140),
+            mimeType: "application/pdf",
+            sizeBytes: file.size,
+            payloadBase64: base64,
+            createdAt: serverTimestamp()
+          });
+          await addDoc(collection(db, "policies"), {
+            applicationId: app.id,
+            applicationCode: app.applicationCode,
+            customerUid: app.customerUid,
+            customerName: app.fullName,
+            policyNumber,
+            policyDocId: docRef.id,
+            issueDate: new Date().toISOString().slice(0, 10),
+            issuedBy: state.user.email || "admin",
+            createdAt: serverTimestamp()
+          });
+          await updateDoc(doc(db, "applications", app.id), {
+            applicationStatus: "POLICY_ISSUED",
+            policyNumber,
+            policyDocId: docRef.id,
+            updatedAt: serverTimestamp()
+          });
+          await notifyCustomer(app.customerUid, `Policy Issued: ${policyNumber}`, `Your EV insurance policy (${policyNumber}) is now available in PDF Tools & Policies.`, "POLICY_ISSUED", app.id);
+          await writeAuditLog("ISSUE_POLICY", app.id, `Issued ${policyNumber}`);
+          showToast(`Policy ${policyNumber} issued successfully!`);
+          closeModal();
+        } catch (e) { showToast(`Policy upload error: ${e.message}`); }
+      }
+    }, "Upload Policy PDF & Mark POLICY_ISSUED"));
+    modal.append(policyCard);
+
+    // Uploaded Customer Documents Gallery
+    const docsWrap = el("div", { style: "border-top:1px solid var(--border); padding-top:14px;" });
+    docsWrap.append(el("div", { style: "font-weight:700; color:var(--red-dark);" }, "Uploaded Documents & Photos"));
+    const docGrid = el("div", { class: "doc-grid" });
+    docsWrap.append(docGrid);
+    modal.append(docsWrap);
+
+    $("modalBackdrop").classList.remove("hidden");
+
+    const entries = Object.entries(app.documentIds || {});
+    if (entries.length === 0) {
+      docGrid.append(el("div", { style: "font-size:13px; color:var(--muted);" }, "No documents attached."));
+    } else {
+      for (const [label, docId] of entries) {
+        const tile = el("div", { class: "doc-tile" });
+        tile.append(el("div", { style: "font-size:11px; font-weight:700; color:var(--red-dark);" }, label));
+        const statusEl = el("div", { style: "font-size:11px; color:var(--muted);" }, "Loading...");
+        tile.append(statusEl);
+        docGrid.append(tile);
+        try {
+          const snap = await getDoc(doc(db, "applicationDocs", docId));
+          if (snap.exists()) {
+            const d = snap.data();
+            statusEl.remove();
+            if ((d.mimeType || "").startsWith("image/")) {
+              const src = `data:${d.mimeType};base64,${d.payloadBase64}`;
+              const img = el("img", { src, alt: label, onClick: () => window.open(src, "_blank") });
+              tile.append(img);
+            } else {
+              const link = el("a", {
+                href: `data:${d.mimeType || "application/octet-stream"};base64,${d.payloadBase64}`,
+                download: d.fileName || `${label}.pdf`,
+                class: "btn btn-outline btn-sm",
+                style: "margin-top:8px; width:100%;"
+              }, "Download File");
+              tile.append(link);
+            }
+          } else {
+            statusEl.textContent = "Not found";
+          }
+        } catch (err) {
+          statusEl.textContent = "Error loading";
+        }
+      }
+    }
+  }
+
+  function renderPayments() {
+    const tbody = $("paymentsTableBody");
+    clearNode(tbody);
+    state.payments.forEach((p) => {
+      const tr = el("tr");
+      tr.append(
+        el("td", {}, p.applicationCode || "—"),
+        el("td", {}, `${p.customerName || "—"} (${p.customerMobile || "—"})`),
+        el("td", {}, `₹${Number(p.amount || 0).toLocaleString("en-IN")}`),
+        el("td", {}, p.upiId || "—"),
+        el("td", {}, p.utrNumber || "—"),
+        (() => { const td = el("td"); td.append(badgeEl(p.paymentStatus || "PENDING_VERIFICATION")); return td; })(),
+        (() => {
+          const td = el("td");
+          td.append(el("button", { class: "btn btn-dark btn-sm", onClick: () => openPaymentModal(p) }, "Verify"));
+          return td;
+        })()
+      );
+      tbody.append(tr);
+    });
+  }
+
+  async function openPaymentModal(p) {
+    const modal = $("modalContent");
+    clearNode(modal);
+    const header = el("div", { class: "card-header" });
+    header.append(
+      el("div", { class: "card-title" }, `Payment Proof — ${p.applicationCode}`),
+      el("button", { class: "btn btn-outline btn-sm", onClick: closeModal }, "Close")
+    );
+    modal.append(header);
+
+    const meta = el("div", { style: "font-size:13px; line-height:1.7; margin-bottom:12px;" });
+    meta.append(
+      el("div", {}, `Customer: ${p.customerName} (${p.customerMobile})`),
+      el("div", {}, `Amount: ₹${p.amount}  |  UPI: ${p.upiId}  |  UTR: ${p.utrNumber || "Not entered"}`),
+      el("div", {}, `Current Status: ${p.paymentStatus}`)
+    );
+    modal.append(meta);
+
+    const imgHolder = el("div", { style: "margin-bottom:12px; text-align:center;" }, "Loading payment screenshot...");
+    modal.append(imgHolder);
+
+    const remarksInput = el("input", { placeholder: "Verification remarks (optional)", value: p.verificationRemarks || "", style: "width:100%; margin-bottom:12px;" });
+    modal.append(remarksInput);
+
+    const actions = el("div", { style: "display:flex; gap:10px; flex-wrap:wrap;" });
+    actions.append(
+      el("button", { class: "btn btn-ok", onClick: () => verifyPayment(p, true, remarksInput.value.trim()) }, "Verify & Approve Payment"),
+      el("button", { class: "btn btn-err", onClick: () => verifyPayment(p, false, remarksInput.value.trim()) }, "Reject Payment")
+    );
+    modal.append(actions);
+    $("modalBackdrop").classList.remove("hidden");
+
+    if (p.screenshotDocId) {
+      try {
+        const snap = await getDoc(doc(db, "applicationDocs", p.screenshotDocId));
+        clearNode(imgHolder);
+        if (snap.exists()) {
+          const d = snap.data();
+          const src = `data:${d.mimeType || "image/jpeg"};base64,${d.payloadBase64}`;
+          imgHolder.append(el("img", { src, style: "max-width:100%; max-height:360px; border-radius:10px; border:1px solid var(--border);" }));
+        } else {
+          imgHolder.textContent = "Screenshot document not found.";
+        }
+      } catch (e) { imgHolder.textContent = "Failed to load screenshot."; }
+    }
+  }
+
+  async function verifyPayment(p, approved, remarks) {
+    try {
+      const nextPayStatus = approved ? "VERIFIED" : "REJECTED";
+      const nextAppStatus = approved ? "APPROVED" : "PAYMENT_PENDING";
+      await updateDoc(doc(db, "payments", p.id), {
+        paymentStatus: nextPayStatus,
+        verificationRemarks: remarks,
+        verifiedBy: state.user.email || "admin",
+        verifiedAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
+      });
+      await updateDoc(doc(db, "applications", p.applicationId), {
+        paymentStatus: nextPayStatus,
+        applicationStatus: nextAppStatus,
+        adminRemarks: remarks || (approved ? "Payment verified by Admin." : "Payment rejected. Please re-submit valid proof."),
+        updatedAt: serverTimestamp()
+      });
+      await notifyCustomer(
+        p.customerUid,
+        approved ? `Payment Verified (${p.applicationCode})` : `Payment Rejected (${p.applicationCode})`,
+        approved ? `Your ₹${p.amount} UPI payment has been verified. Application is now APPROVED.` : `Your payment proof was rejected. ${remarks}`,
+        "PAYMENT_UPDATE",
+        p.applicationId
+      );
+      await writeAuditLog(approved ? "VERIFY_PAYMENT" : "REJECT_PAYMENT", p.id, `${p.applicationCode} ₹${p.amount} ${remarks}`);
+      showToast(`Payment ${nextPayStatus}`);
+      closeModal();
+    } catch (e) { showToast(`Error: ${e.message}`); }
+  }
+
+  function renderCustomers() {
+    const tbody = $("customersTableBody");
+    clearNode(tbody);
+    state.users.forEach((u) => {
+      const tr = el("tr");
+      const nextStatus = u.accountStatus === "DISABLED" ? "ACTIVE" : "DISABLED";
+      tr.append(
+        el("td", {}, u.name || "—"),
+        el("td", {}, u.email || "—"),
+        el("td", {}, u.mobile || "—"),
+        el("td", {}, u.city || "—"),
+        (() => { const td = el("td"); td.append(badgeEl(u.accountStatus || "ACTIVE")); return td; })(),
+        (() => {
+          const td = el("td");
+          td.append(
+            el("button", { class: "btn btn-outline btn-sm", style: "margin-right:6px;", onClick: () => { navigator.clipboard.writeText(u.uid || u.id); showToast("User UID copied"); } }, "Copy UID"),
+            el("button", {
+              class: "btn btn-dark btn-sm",
+              onClick: async () => {
+                try {
+                  await updateDoc(doc(db, "users", u.id), { accountStatus: nextStatus, updatedAt: serverTimestamp() });
+                  await writeAuditLog("TOGGLE_CUSTOMER_STATUS", u.id, `${u.email} -> ${nextStatus}`);
+                  showToast(`Customer marked ${nextStatus}`);
+                } catch (e) { showToast(`Error: ${e.message}`); }
+              }
+            }, nextStatus === "DISABLED" ? "Disable" : "Activate")
+          );
+          return td;
+        })()
+      );
+      tbody.append(tr);
+    });
+  }
+
+  function populateSettingsForm() {
+    const s = state.settings;
+    if (!s) return;
+    $("setBusinessName").value = s.businessName || "";
+    $("setContactPhone").value = s.contactPhone || "";
+    $("setSupportEmail").value = s.supportEmail || "";
+    $("setUpiId").value = s.upiId || "9507402469-3@ibl";
+    $("setUpiRecipient").value = s.upiRecipientName || "RAAG AUTOMOBILES";
+    $("setAmount").value = s.defaultAmount || 4500;
+    $("setInstructions").value = s.paymentInstructions || "";
+  }
+
+  $("settingsForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    try {
+      await setDoc(doc(db, "settings", "appConfig"), {
+        businessName: $("setBusinessName").value.trim(),
+        contactPhone: $("setContactPhone").value.trim(),
+        supportEmail: $("setSupportEmail").value.trim(),
+        upiId: $("setUpiId").value.trim(),
+        upiRecipientName: $("setUpiRecipient").value.trim(),
+        defaultAmount: Number($("setAmount").value),
+        paymentInstructions: $("setInstructions").value.trim(),
+        updatedBy: state.user.email || "admin",
+        updatedAt: serverTimestamp()
+      }, { merge: true });
+      await writeAuditLog("UPDATE_SETTINGS", "appConfig", `UPI=${$("setUpiId").value.trim()}, Amount=${$("setAmount").value}`);
+      showToast("Settings saved and synced to Android app!");
+    } catch (err) { showToast(`Error: ${err.message}`); }
+  });
+
+  function renderStaff() {
+    const tbody = $("staffTableBody");
+    clearNode(tbody);
+    state.admins.forEach((a) => {
+      const tr = el("tr");
+      tr.append(
+        el("td", {}, a.name || "—"),
+        el("td", {}, a.email || "—"),
+        el("td", {}, a.uid || a.id),
+        (() => { const td = el("td"); td.append(badgeEl(a.role || "APPLICATION_MANAGER")); return td; })(),
+        (() => { const td = el("td"); td.append(badgeEl(a.active ? "ACTIVE" : "DISABLED")); return td; })(),
+        (() => {
+          const td = el("td");
+          td.append(el("button", {
+            class: "btn btn-err btn-sm",
+            onClick: async () => {
+              try {
+                await deleteDoc(doc(db, "admins", a.id));
+                await writeAuditLog("REMOVE_ADMIN", a.id, `Removed ${a.email}`);
+                showToast("Admin role removed");
+              } catch (e) { showToast(`Error: ${e.message}`); }
+            }
+          }, "Remove"));
+          return td;
+        })()
+      );
+      tbody.append(tr);
+    });
+  }
+
+  $("addAdminForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const uid = $("newAdminUid").value.trim();
+    const email = $("newAdminEmail").value.trim();
+    const name = $("newAdminName").value.trim();
+    const role = $("newAdminRole").value;
+    try {
+      await setDoc(doc(db, "admins", uid), {
+        uid, email, name, role, active: true,
+        createdBy: state.user.uid,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
+      });
+      await writeAuditLog("ASSIGN_ADMIN", uid, `${email} as ${role}`);
+      $("addAdminForm").reset();
+      showToast(`Assigned ${role} to ${email}`);
+    } catch (err) { showToast(`Error: ${err.message}`); }
+  });
+
+  function renderLogs() {
+    const tbody = $("logsTableBody");
+    clearNode(tbody);
+    state.logs.forEach((l) => {
+      const tr = el("tr");
+      tr.append(
+        el("td", {}, formatTs(l.createdAt)),
+        el("td", {}, l.adminEmail || l.adminUid || "—"),
+        (() => { const td = el("td"); td.append(badgeEl(l.action || "ACTION")); return td; })(),
+        el("td", {}, l.recordId || "—"),
+        el("td", {}, l.details || "—")
+      );
+      tbody.append(tr);
+    });
+  }
+
+  function fileToBase64(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(String(reader.result).split(",")[1] || "");
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  }
+
+  function closeModal() { $("modalBackdrop").classList.add("hidden"); }
+  $("modalBackdrop").addEventListener("click", (e) => { if (e.target === $("modalBackdrop")) closeModal(); });
+
+  function switchTab(tabName) {
+    document.querySelectorAll(".nav-btn").forEach((b) => b.classList.toggle("active", b.dataset.tab === tabName));
+    document.querySelectorAll(".tab-panel").forEach((p) => p.classList.toggle("hidden", p.id !== `tab-${tabName}`));
+  }
+  document.querySelectorAll(".nav-btn").forEach((b) => b.addEventListener("click", () => switchTab(b.dataset.tab)));
+  $("jumpAppsBtn").addEventListener("click", () => switchTab("applications"));
+  $("appSearchInput").addEventListener("input", renderApplications);
+  $("appStatusFilter").addEventListener("change", renderApplications);
+</script>
+</body>
+</html>

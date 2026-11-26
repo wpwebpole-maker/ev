@@ -1,0 +1,219 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "Registered customer profile document keyed by Firebase Auth UID.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "description": "Firebase Auth UID matching document ID." },
+        "name": { "type": "string", "description": "Customer full name." },
+        "email": { "type": "string", "description": "Customer email address." },
+        "mobile": { "type": "string", "description": "Customer mobile number." },
+        "address": { "type": "string", "description": "Customer street address." },
+        "city": { "type": "string", "description": "Customer city." },
+        "pinCode": { "type": "string", "description": "Customer postal PIN code." },
+        "accountStatus": { "type": "string", "enum": ["ACTIVE", "DISABLED"] },
+        "consentAccepted": { "type": "boolean", "description": "Privacy policy and terms consent flag." },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Server timestamp (FieldValue.serverTimestamp())." },
+        "updatedAt": { "type": "string", "format": "date-time", "description": "Server timestamp (FieldValue.serverTimestamp())." }
+      },
+      "required": ["uid", "name", "email", "accountStatus", "consentAccepted", "createdAt", "updatedAt"]
+    },
+    "AdminRecord": {
+      "title": "AdminRecord",
+      "description": "Authorized admin role record managed strictly by Super Admin.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "email": { "type": "string" },
+        "name": { "type": "string" },
+        "role": { "type": "string", "enum": ["SUPER_ADMIN", "APPLICATION_MANAGER", "PAYMENT_MANAGER", "DOCUMENT_MANAGER"] },
+        "active": { "type": "boolean" },
+        "createdBy": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "email", "name", "role", "active", "createdBy", "createdAt", "updatedAt"]
+    },
+    "InsuranceApplication": {
+      "title": "InsuranceApplication",
+      "description": "Customer EV/Scooty insurance application record (no embedded large base64 images).",
+      "type": "object",
+      "properties": {
+        "applicationCode": { "type": "string" },
+        "customerUid": { "type": "string" },
+        "fullName": { "type": "string" },
+        "mobile": { "type": "string" },
+        "email": { "type": "string" },
+        "address": { "type": "string" },
+        "city": { "type": "string" },
+        "pinCode": { "type": "string" },
+        "vehicleBrand": { "type": "string" },
+        "vehicleModel": { "type": "string" },
+        "registrationNumber": { "type": "string" },
+        "batteryNumber": { "type": "string" },
+        "vehicleNotes": { "type": "string" },
+        "documentIds": { "type": "object", "description": "Map of docType to applicationDocs document ID." },
+        "applicationStatus": {
+          "type": "string",
+          "enum": ["DRAFT", "SUBMITTED", "UNDER_REVIEW", "DOCUMENTS_REQUIRED", "PAYMENT_PENDING", "PAYMENT_VERIFICATION", "APPROVED", "POLICY_ISSUED", "REJECTED"]
+        },
+        "paymentStatus": {
+          "type": "string",
+          "enum": ["UNPAID", "PENDING_VERIFICATION", "VERIFIED", "REJECTED"]
+        },
+        "adminRemarks": { "type": "string" },
+        "policyNumber": { "type": "string" },
+        "policyDocId": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["applicationCode", "customerUid", "fullName", "mobile", "address", "applicationStatus", "paymentStatus", "createdAt", "updatedAt"]
+    },
+    "ApplicationDocument": {
+      "title": "ApplicationDocument",
+      "description": "Private uploaded document or photograph isolated per customer and authorized admins.",
+      "type": "object",
+      "properties": {
+        "customerUid": { "type": "string" },
+        "applicationId": { "type": "string" },
+        "docType": {
+          "type": "string",
+          "enum": ["AADHAAR_FRONT", "AADHAAR_BACK", "SCOOTY_FRONT", "SCOOTY_BACK", "SCOOTY_LEFT", "SCOOTY_RIGHT", "BATTERY_PHOTO", "PAYMENT_SCREENSHOT", "POLICY_PDF"]
+        },
+        "fileName": { "type": "string" },
+        "mimeType": { "type": "string" },
+        "sizeBytes": { "type": "number" },
+        "payloadBase64": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["customerUid", "applicationId", "docType", "fileName", "mimeType", "sizeBytes", "payloadBase64", "createdAt"]
+    },
+    "PaymentRecord": {
+      "title": "PaymentRecord",
+      "description": "UPI payment proof submission linked to a customer application; verified only by admins.",
+      "type": "object",
+      "properties": {
+        "applicationId": { "type": "string" },
+        "applicationCode": { "type": "string" },
+        "customerUid": { "type": "string" },
+        "customerName": { "type": "string" },
+        "customerMobile": { "type": "string" },
+        "amount": { "type": "number" },
+        "upiId": { "type": "string" },
+        "utrNumber": { "type": "string" },
+        "screenshotDocId": { "type": "string" },
+        "paymentStatus": { "type": "string", "enum": ["PENDING_VERIFICATION", "VERIFIED", "REJECTED"] },
+        "verificationRemarks": { "type": "string" },
+        "verifiedBy": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" },
+        "verifiedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["applicationId", "applicationCode", "customerUid", "customerName", "customerMobile", "amount", "upiId", "screenshotDocId", "paymentStatus", "createdAt", "updatedAt"]
+    },
+    "PolicyRecord": {
+      "title": "PolicyRecord",
+      "description": "Issued EV insurance policy uploaded and linked strictly by authorized admins.",
+      "type": "object",
+      "properties": {
+        "applicationId": { "type": "string" },
+        "applicationCode": { "type": "string" },
+        "customerUid": { "type": "string" },
+        "customerName": { "type": "string" },
+        "policyNumber": { "type": "string" },
+        "policyDocId": { "type": "string" },
+        "issueDate": { "type": "string" },
+        "issuedBy": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["applicationId", "applicationCode", "customerUid", "customerName", "policyNumber", "policyDocId", "issueDate", "issuedBy", "createdAt"]
+    },
+    "AppNotification": {
+      "title": "AppNotification",
+      "description": "In-app notification record delivered to a specific customer or admin.",
+      "type": "object",
+      "properties": {
+        "recipientUid": { "type": "string" },
+        "title": { "type": "string" },
+        "message": { "type": "string" },
+        "type": { "type": "string" },
+        "relatedId": { "type": "string" },
+        "read": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["recipientUid", "title", "message", "type", "read", "createdAt"]
+    },
+    "AppSettings": {
+      "title": "AppSettings",
+      "description": "Global dynamic business, UPI payment, and support settings controlled by Super Admin.",
+      "type": "object",
+      "properties": {
+        "businessName": { "type": "string" },
+        "contactPhone": { "type": "string" },
+        "supportEmail": { "type": "string" },
+        "upiId": { "type": "string" },
+        "upiRecipientName": { "type": "string" },
+        "defaultAmount": { "type": "number" },
+        "paymentInstructions": { "type": "string" },
+        "privacyPolicyUrl": { "type": "string" },
+        "termsUrl": { "type": "string" },
+        "updatedBy": { "type": "string" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["businessName", "contactPhone", "upiId", "upiRecipientName", "defaultAmount", "updatedBy", "updatedAt"]
+    },
+    "AdminAuditLog": {
+      "title": "AdminAuditLog",
+      "description": "Immutable admin action audit trail.",
+      "type": "object",
+      "properties": {
+        "adminUid": { "type": "string" },
+        "adminEmail": { "type": "string" },
+        "action": { "type": "string" },
+        "recordId": { "type": "string" },
+        "details": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["adminUid", "adminEmail", "action", "recordId", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/UserProfile" },
+      "description": "Customer profile documents strictly isolated per UID or authorized admin."
+    },
+    "/admins/{adminUid}": {
+      "schema": { "$ref": "#/entities/AdminRecord" },
+      "description": "Server-enforced admin RBAC directory editable only by Super Admin."
+    },
+    "/applications/{applicationId}": {
+      "schema": { "$ref": "#/entities/InsuranceApplication" },
+      "description": "EV/Scooty insurance applications scoped to customerUid or authorized admin."
+    },
+    "/applicationDocs/{docId}": {
+      "schema": { "$ref": "#/entities/ApplicationDocument" },
+      "description": "Private customer photographs, Aadhaar scans, payment screenshots, and policy files."
+    },
+    "/payments/{paymentId}": {
+      "schema": { "$ref": "#/entities/PaymentRecord" },
+      "description": "UPI payment proof records; manual admin verification required."
+    },
+    "/policies/{policyId}": {
+      "schema": { "$ref": "#/entities/PolicyRecord" },
+      "description": "Issued insurance policy records managed exclusively by authorized admins."
+    },
+    "/notifications/{notificationId}": {
+      "schema": { "$ref": "#/entities/AppNotification" },
+      "description": "In-app notifications per recipientUid."
+    },
+    "/settings/{settingId}": {
+      "schema": { "$ref": "#/entities/AppSettings" },
+      "description": "Dynamic app configuration stored at /settings/appConfig."
+    },
+    "/adminLogs/{logId}": {
+      "schema": { "$ref": "#/entities/AdminAuditLog" },
+      "description": "Append-only admin audit log entries."
+    }
+  }
+}

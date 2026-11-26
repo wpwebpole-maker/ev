@@ -1,0 +1,6 @@
+{
+  "name": "Raag EV Insurance",
+  "description": "RAAG AUTOMOBILES EV Insurance customer portal and admin management platform with Firebase backend, UPI payments, document uploads, and A4 PDF generation.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Scooty Insurance – Doc Scanner Style</title>
+<style>
+:root{--blue:#174ea6;--ink:#172033;--muted:#64748b;--line:#dbe3ef;--bg:#f3f6fb}
+*{box-sizing:border-box} body{margin:0;font-family:Arial,"Noto Sans Devanagari",sans-serif;background:var(--bg);color:var(--ink)}
+header{background:linear-gradient(135deg,#123b7a,#2876c7);color:white;padding:22px 16px;text-align:center}
+.logo{width:68px;height:68px;border:2px solid #fff;border-radius:50%;display:grid;place-items:center;margin:0 auto 9px;font-size:32px}
+header h1{font-size:22px;margin:0} header p{margin:6px 0 0;font-size:13px;opacity:.9}
+main{max-width:820px;margin:18px auto;padding:0 12px 35px}
+.panel{background:white;border:1px solid var(--line);border-radius:14px;padding:17px;margin-bottom:15px;box-shadow:0 3px 12px #18345a0b}
+h2{font-size:17px;margin:0 0 14px;color:#173d76}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+label{display:block;font-size:13px;font-weight:700;margin:0 0 6px}
+input,textarea{width:100%;padding:11px;border:1px solid #cbd5e1;border-radius:8px;font:inherit;background:#fff}
+textarea{min-height:76px;resize:vertical}.field{margin-bottom:12px}
+.hint{font-size:12px;color:var(--muted);margin-top:5px}
+button{border:0;border-radius:9px;padding:12px 15px;font-weight:700;font-size:14px;cursor:pointer}
+.primary{background:var(--blue);color:white}.secondary{background:#e8effa;color:#17437f}.danger{background:#fee2e2;color:#991b1b}
+.actions{display:flex;gap:9px;flex-wrap:wrap}.photo-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.preview{width:100%;max-height:130px;object-fit:contain;margin-top:7px;border:1px dashed #cbd5e1;border-radius:7px;display:none}
+.record{display:flex;justify-content:space-between;gap:10px;align-items:center;border-top:1px solid var(--line);padding:12px 0}
+.record:first-child{border-top:0}.record small{display:block;color:var(--muted);margin-top:3px}
+#notice{font-size:13px;color:#17623a;margin-top:10px;min-height:18px}
+@media(max-width:560px){.grid,.photo-grid{grid-template-columns:1fr}.panel{padding:14px}}
+
+:root{--navy:#1d3b49;--scannerblue:#078bd0;--muted:#7a7a7a;--paper:#fff;--bg:#f5f5f5}
+body{background:var(--bg);color:#30343a;font-family:Arial,"Noto Sans Devanagari",sans-serif}
+.topbar{min-height:76px;height:auto;background:var(--navy);color:#fff;display:flex;align-items:center;gap:18px;padding:10px 18px;position:sticky;top:0;z-index:5;box-shadow:0 2px 5px #0002;flex-wrap:wrap}.topbar .top-mobile{flex-basis:100%;font-size:14px;font-weight:700;padding-left:52px;margin-top:-5px;color:#fff}
+.topbar .hamb{font-size:27px;width:34px}.topbar h1{font-size:25px;font-weight:600;margin:0;flex:1}.topbar .topicon{font-size:25px;color:white}
+.promo{margin:14px 14px;background:#168ee0;color:#fff;border-radius:20px;min-height:116px;padding:22px 20px;display:flex;align-items:center;gap:15px;box-shadow:0 2px 5px #0001}.promo .rocket{font-size:42px}.promo strong{font-size:18px;line-height:1.35}.promo small{display:block;margin-top:12px;text-align:right;font-weight:bold;letter-spacing:.4px}
+.tabs{display:flex;overflow:auto;background:#fff;border-bottom:1px solid #ddd;white-space:nowrap}.tabs button{background:none;border-radius:0;color:#777;padding:16px 18px;font-size:15px;border-bottom:4px solid transparent}.tabs button.active{color:#1689bd;border-color:#1689bd}
+.filters{display:flex;gap:10px;overflow:auto;padding:15px 18px;background:#fff;border-bottom:1px solid #ddd}.filters button{border:1px solid #ccc;background:#fff;border-radius:24px;padding:9px 16px;color:#666;white-space:nowrap}.filters button.active{background:#078dc7;color:#fff;border-color:#078dc7}
+main{max-width:850px;margin:0 auto;padding:0 12px 105px}.section-head{display:flex;justify-content:space-between;align-items:center;margin:22px 4px 12px;color:#777;font-weight:700}.folder-grid{display:grid;grid-template-columns:1fr;gap:10px}.folder{display:flex;align-items:center;gap:18px;background:#fff;border:1px solid #e0e0e0;border-radius:13px;padding:17px;box-shadow:0 2px 5px #0002;min-height:94px}.folder .folder-icon{font-size:46px}.folder b{font-size:17px;font-weight:500;color:#777}.folder small{display:block;color:#888;margin-top:6px}.folder .dots{margin-left:auto;color:#777;font-size:22px}
+.panel{border-radius:12px;border:1px solid #e3e3e3;box-shadow:0 2px 5px #0001;padding:16px}.panel h2{color:#234452}.record{background:#fff;border-top:1px solid #eee;padding:15px 10px}.record strong{font-size:15px;color:#666}.record small{font-size:12px}.record button{padding:9px 11px;font-size:12px}
+.fab{position:fixed;right:20px;bottom:28px;z-index:8;background:#078fd0;color:#fff;border-radius:38px;padding:14px 23px;box-shadow:0 5px 15px #0003;font-size:24px;display:flex;gap:22px;align-items:center}.fab span+span{border-left:1px solid #ffffff80;padding-left:18px}
+#customerForm{display:none}.searchbar{display:none;padding:10px 16px;background:#fff}.searchbar input{border-radius:22px}
+.emptyhint{color:#888;font-size:13px;padding:4px 8px}
+@media(min-width:650px){.folder-grid{grid-template-columns:1fr 1fr}.promo{max-width:820px;margin:16px auto}.filters{justify-content:center}}
+@media print{.topbar,.promo,.tabs,.filters,.fab,.searchbar,.section-head,.folder-grid{display:none!important}}
+
+@page{size:A4 portrait;margin:12mm}
+@media print{
+  body{background:white;color:#111}.no-print,header,main{display:none!important}
+  #printRoot{display:block!important}
+  .print-page{width:100%;font-family:Arial,sans-serif;color:#111;font-size:11pt;page-break-after:always}
+  .print-page:last-child{page-break-after:auto}
+  .print-page h1{text-align:center;font-size:19pt;margin:0 0 5mm}
+  .print-page h3{font-size:12pt;border-bottom:1px solid #777;padding-bottom:2mm;margin:5mm 0 3mm}
+  .print-details{display:grid;grid-template-columns:1fr 1fr;gap:3mm 8mm}
+  .print-details div{padding:2mm 0;border-bottom:1px solid #ddd;overflow-wrap:anywhere}
+  .print-photos{display:grid;grid-template-columns:1fr 1fr;gap:5mm}
+  .print-photo{break-inside:avoid;border:1px solid #ccc;padding:2mm;text-align:center}
+  .print-photo img{width:100%;height:62mm;object-fit:contain;display:block}
+  .print-photo span{display:block;font-size:9pt;margin-top:1mm}
+  .print-footer{margin-top:7mm;font-size:9pt;color:#555}
+}
+#printRoot{display:none}
+</style>
+</head>
+<body>
+<header class="topbar no-print"><span class="hamb">☰</span><h1>Scooty Insurance</h1><span class="topicon">♛</span><span class="topicon" id="searchToggle">⌕</span><span class="topicon">⋮</span><span class="top-mobile">मोबाइल नंबर: 9507402469</span></header>
+
+<!-- Auto Scanner 4500: UPI payment QR (amount left open; customer enters amount) -->
+<section class="panel no-print" id="autoScanner4500" style="max-width:850px;margin:16px auto;padding:18px;background:#fff;border:1px solid #dbe3ef;border-radius:14px">
+  <h2 style="margin:0 0 8px;color:#173d76">📲 Scan Auto Scanner 4500</h2>
+  <p style="margin:0 0 12px;color:#64748b;font-size:13px">UPI पेमेंट के लिए QR स्कैन करें। इसमें ₹4,500 की राशि पहले से फिक्स है।</p>
+  <div style="display:flex;flex-wrap:wrap;gap:16px;align-items:center">
+    <div id="autoScanner4500Qr" style="width:220px;height:220px;display:grid;place-items:center;background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:8px">
+      <span style="font-size:12px;color:#64748b;text-align:center">QR लोड हो रहा है…</span>
+    </div>
+    <div style="flex:1;min-width:220px">
+      <p style="margin:0 0 8px"><b>UPI ID:</b> <span id="autoScanner4500Upi">9507402469-3@ibl</span></p>
+      <label for="autoScanner4500Name" style="display:block;font-size:13px;font-weight:700;margin:10px 0 5px">प्राप्तकर्ता का नाम (वैकल्पिक)</label>
+      <input id="autoScanner4500Name" type="text" value="Scooty Insurance" style="width:100%;padding:10px;border:1px solid #cbd5e1;border-radius:8px">
+      <label for="autoScanner4500Amount" style="display:block;font-size:13px;font-weight:700;margin:10px 0 5px">फिक्स भुगतान राशि ₹</label>
+      <input id="autoScanner4500Amount" type="number" min="1" step="0.01" value="4500" readonly style="width:100%;padding:10px;border:1px solid #cbd5e1;border-radius:8px">
+      <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:12px">
+        <button type="button" class="primary" id="autoScanner4500Update">QR अपडेट करें</button>
+        <button type="button" class="secondary" id="autoScanner4500Copy">UPI ID कॉपी करें</button>
+        <a id="autoScanner4500Pay" href="upi://pay?pa=9507402469-2%40ybl&pn=Scooty%20Insurance" style="display:inline-block;padding:12px 15px;border-radius:9px;background:#e8effa;color:#17437f;font-weight:700;text-decoration:none">UPI ऐप से भुगतान</a>
+      </div>
+      <p id="autoScanner4500Status" role="status" style="font-size:12px;color:#17623a;margin:10px 0 0"></p>
+    </div>
+  </div>
+</section>
+<!-- Payment proof is attached to the same Auto Scanner section -->
+<section class="panel no-print" id="scannerPaymentProof" style="max-width:850px;margin:16px auto;padding:18px;background:#fff;border:1px solid #dbe3ef;border-radius:14px">
+  <h2 style="margin:0 0 8px;color:#173d76">🧾 स्कैनर पेमेंट का स्क्रीनशॉट सेव करें</h2>
+  <p style="font-size:13px;color:#64748b;margin:0 0 12px">ऊपर दिए गए ₹4,500 UPI स्कैनर से भुगतान करने वाले ग्राहक की पेमेंट रसीद/स्क्रीनशॉट यहाँ सेव करें।</p>
+  <p class="hint" style="margin:0 0 10px">ग्राहक का नाम और मोबाइल नंबर ऊपर “ग्राहक की जानकारी” वाले फॉर्म से अपने-आप लिए जाएँगे। भुगतान राशि ₹4,500 फिक्स है।</p>
+  <label for="scannerPayImage">पेमेंट स्क्रीनशॉट चुनें</label>
+  <input id="scannerPayImage" type="file" accept="image/*" style="margin-bottom:10px">
+  <img id="scannerPayPreview" alt="पेमेंट स्क्रीनशॉट प्रीव्यू" style="display:none;max-width:100%;max-height:260px;object-fit:contain;border:1px solid #ddd;border-radius:8px;margin:8px 0">
+  <div style="display:flex;gap:8px;flex-wrap:wrap">
+    <button type="button" class="primary" id="scannerPaySave">स्क्रीनशॉट सेव करें</button>
+    <button type="button" class="secondary" id="scannerPayClear">फॉर्म साफ करें</button>
+  </div>
+  <p id="scannerPayStatus" role="status" style="font-size:13px;color:#17623a;min-height:18px"></p>
+  <h3 style="margin:12px 0 6px;color:#234452">सेव किए गए पेमेंट स्क्रीनशॉट</h3>
+  <div id="scannerPayList"><p class="hint">अभी कोई पेमेंट स्क्रीनशॉट सेव नहीं है।</p></div>
+</section>
+<script>
+(function(){
+ const $=id=>document.getElementById(id), key='scootyScannerPaymentProofsV1'; let imageData='';
+ function read(){try{return JSON.parse(localStorage.getItem(key)||'[]')}catch(e){return []}}
+ function write(rows){localStorage.setItem(key,JSON.stringify(rows))}
+ $('scannerPayImage').addEventListener('change',()=>{
+   const f=$('scannerPayImage').files&&$('scannerPayImage').files[0]; imageData='';
+   if(!f){$('scannerPayPreview').style.display='none';return}
+   if(!f.type.startsWith('image/')){$('scannerPayStatus').textContent='कृपया इमेज स्क्रीनशॉट चुनें।';return}
+   const reader=new FileReader(); reader.onload=()=>{
+     const img=new Image(); img.onload=()=>{
+       const scale=Math.min(1,1400/Math.max(img.width,img.height));
+       const canvas=document.createElement('canvas');canvas.width=Math.round(img.width*scale);canvas.height=Math.round(img.height*scale);
+       canvas.getContext('2d').drawImage(img,0,0,canvas.width,canvas.height);
+       imageData=canvas.toDataURL('image/jpeg',0.76);$('scannerPayPreview').src=imageData;$('scannerPayPreview').style.display='block';
+       $('scannerPayStatus').textContent='स्क्रीनशॉट चुन लिया गया है। अब सेव करें।';
+     }; img.onerror=()=>{$('scannerPayStatus').textContent='इमेज पढ़ी नहीं जा सकी। दूसरी इमेज चुनें।'}; img.src=reader.result;
+   }; reader.readAsDataURL(f);
+ });
+ function render(){const root=$('scannerPayList'),rows=read();root.innerHTML='';
+   if(!rows.length){root.innerHTML='<p class="hint">अभी कोई पेमेंट स्क्रीनशॉट सेव नहीं है।</p>';return}
+   rows.slice().reverse().forEach(r=>{const card=document.createElement('div');card.style.cssText='border-top:1px solid #e5e7eb;padding:12px 0;display:flex;gap:12px;align-items:flex-start;flex-wrap:wrap';
+     const im=document.createElement('img');im.src=r.image;im.alt='Payment screenshot';im.style.cssText='width:110px;max-height:130px;object-fit:contain;border:1px solid #ddd;border-radius:6px';
+     const info=document.createElement('div');info.style.flex='1';const title=document.createElement('b');title.textContent=r.name||'नाम नहीं दिया';
+     const meta=document.createElement('p');meta.style.cssText='margin:4px 0;font-size:12px;color:#64748b';meta.textContent='मोबाइल: '+(r.mobile||'—')+' | राशि: ₹'+r.amount+' | '+r.date;
+     const download=document.createElement('a');download.href=r.image;download.download='payment-screenshot-'+r.id+'.jpg';download.textContent='स्क्रीनशॉट डाउनलोड करें';download.style.cssText='display:inline-block;margin:3px 10px 3px 0;color:#174ea6;font-weight:700';
+     const del=document.createElement('button');del.className='danger';del.textContent='हटाएँ';del.onclick=()=>{if(confirm('यह पेमेंट स्क्रीनशॉट हटाएँ?')){write(read().filter(x=>x.id!==r.id));render()}};
+     info.append(title,meta,download,del);card.append(im,info);root.append(card);
+   });
+ }
+ $('scannerPaySave').addEventListener('click',()=>{
+   const name=$('name').value.trim(),mobile=$('mobile').value.trim(),amount=4500;
+   if(!imageData){$('scannerPayStatus').textContent='पहले पेमेंट स्क्रीनशॉट चुनें।';return}
+   if(!name||!mobile){$('scannerPayStatus').textContent='पहले मुख्य ग्राहक फॉर्म में नाम और मोबाइल नंबर भरें।';return}
+   const rows=read();rows.push({id:Date.now(),name,mobile,amount,image:imageData,date:new Date().toLocaleString('hi-IN')});
+   try{write(rows);$('scannerPayStatus').textContent='पेमेंट स्क्रीनशॉट इसी ब्राउज़र में सेव हो गया।';$('scannerPayImage').value='';$('scannerPayPreview').style.display='none';imageData='';render();}
+   catch(e){$('scannerPayStatus').textContent='ब्राउज़र स्टोरेज भर गया है। कुछ पुराने स्क्रीनशॉट हटाकर फिर कोशिश करें।'}
+ });
+ $('scannerPayClear').addEventListener('click',()=>{$('scannerPayImage').value='';$('scannerPayPreview').style.display='none';imageData='';$('scannerPayStatus').textContent=''});
+ render();
+})();
+</script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script>
+(function(){
+  const upi = "9507402469-3@ibl";
+  const qrBox = document.getElementById("autoScanner4500Qr");
+  const amountBox = document.getElementById("autoScanner4500Amount");
+  const nameBox = document.getElementById("autoScanner4500Name");
+  const payLink = document.getElementById("autoScanner4500Pay");
+  const status = document.getElementById("autoScanner4500Status");
+  function makeUri(){
+    const params = new URLSearchParams({pa:upi, pn:nameBox.value.trim() || "Scooty Insurance", cu:"INR"});
+    const amount = "4500";
+    params.set("am", amount);
+    return "upi://pay?" + params.toString();
+  }
+  function update(){
+    const uri = makeUri();
+    payLink.href = uri;
+    qrBox.innerHTML = "";
+    if(window.QRCode){
+      new QRCode(qrBox, {text:uri, width:200, height:200, correctLevel:QRCode.CorrectLevel.M});
+      status.textContent = "₹4,500 का फिक्स UPI QR तैयार है।";
+    } else {
+      qrBox.textContent = "QR बनाने के लिए इंटरनेट कनेक्शन चालू करें और पेज दोबारा खोलें।";
+      status.textContent = "QR लाइब्रेरी लोड नहीं हुई।";
+    }
+  }
+  document.getElementById("autoScanner4500Update").addEventListener("click", update);
+  document.getElementById("autoScanner4500Copy").addEventListener("click", async function(){
+    try { await navigator.clipboard.writeText(upi); status.textContent = "UPI ID कॉपी हो गई।"; }
+    catch(e) { status.textContent = "UPI ID: " + upi; }
+  });
+  update();
+})();
+</script>
+
+<div class="promo no-print"><span class="rocket">🛵</span><div><strong>आपके सभी स्कूटी इंश्योरेंस रिकॉर्ड एक जगह!</strong><small>ग्राहक जोड़ें　 PDF बनाएं ›</small></div></div>
+<nav class="tabs no-print"><button class="active" data-tab="home">⌂　Home</button><button data-tab="form">▣　Customer Form</button><button data-tab="pdf">▤　PDF Tools</button><button data-tab="aadhaar">▣　ID Photo</button></nav>
+<div class="searchbar no-print" id="searchBar"><input id="searchInput" placeholder="ग्राहक का नाम या मोबाइल खोजें..."></div>
+<div class="filters no-print"><button class="active" data-filter="all">All docs</button><button data-filter="recent">◷ Recent</button><button data-filter="favourite">★ Favourite</button><button data-filter="business">Business Card</button></div>
+<main class="no-print">
+  <div id="homeDashboard">
+    <div class="section-head"><span>Folders (3)</span><span>▣＋</span></div>
+    <div class="folder-grid"><div class="folder"><span class="folder-icon">📁</span><div><b>New Folder</b><small>Customer records</small></div><span class="dots">•••</span></div><div class="folder"><span class="folder-icon">📁</span><div><b>ID Cards</b><small>आधार फोटो</small></div><span class="dots">•••</span></div><div class="folder"><span class="folder-icon">📁</span><div><b>Bills</b><small>Insurance PDFs</small></div><span class="dots">•••</span></div></div>
+    <div class="section-head"><span>Documents (<span id="docCount">0</span>)</span><span>⋮</span></div>
+  </div>
+  <div id="customerForm">
+  <section class="panel">
+    <h2>ग्राहक की जानकारी</h2>
+    <div class="grid">
+      <div class="field"><label for="name">पूरा नाम *</label><input id="name" autocomplete="name" placeholder="ग्राहक का पूरा नाम"></div>
+      <div class="field"><label for="mobile">मोबाइल नंबर *</label><input id="mobile" type="tel" inputmode="numeric" maxlength="15" value="9507402469" placeholder="मोबाइल नंबर"></div>
+    </div>
+    <div class="field"><label for="address">पूरा पता *</label><textarea id="address" placeholder="मकान, गली, शहर, जिला, पिन कोड"></textarea></div>
+    <div class="grid">
+      <div class="field"><label for="battery">बैटरी नंबर</label><input id="battery" placeholder="बैटरी नंबर"></div>
+      <div class="field"><label for="vehicle">स्कूटी का 26 नंबर</label><input id="vehicle" placeholder="स्कूटी का 26 नंबर लिखें"></div>
+    </div>
+  </section>
+  <section class="panel">
+    <h2>फोटो अपलोड</h2>
+    <p class="hint">फोटो चुनने के बाद PDF में शामिल होंगी। बेहतर परिणाम के लिए साफ फोटो लें।</p>
+    <div class="photo-grid" id="photoFields"></div>
+  </section>
+  <section class="panel">
+    <h2>रिकॉर्ड सेव करें</h2>
+    <div class="actions">
+      <button class="primary" id="saveBtn">ग्राहक सेव करें</button>
+      <button class="secondary" id="pdfBtn">PDF बनाएँ / सेव करें</button>
+      <button class="secondary" id="pdfHelpBtn">सेव PDF कहाँ मिलेगी?</button>
+      <button class="secondary" id="resetBtn">फॉर्म साफ करें</button>
+    </div>
+    <div id="notice" role="status"></div>
+    <div id="pdfHelp" class="hint" hidden>ग्राहक का रिकॉर्ड ऐप में सेव रहने पर उसकी PDF बाद में भी बनाई जा सकती है। ग्राहक सूची में उसके नाम के सामने <b>PDF खोलें / सेव करें</b> दबाएँ। प्रिंट स्क्रीन में “Save as PDF” चुनकर Save दबाएँ। फाइल आमतौर पर फोन के <b>Downloads</b> फोल्डर में मिलेगी। Chrome में ⋮ मेन्यू → <b>Downloads</b> खोलें।</div>
+    <p class="hint">PDF A4 पेपर (210 × 297 mm) में खुलेगी। प्रिंट विंडो में “Save as PDF” चुनें।</p>
+  </section>
+  </div>
+  <section class="panel" id="recordsPanel">
+    <h2>सेव किए गए ग्राहक और PDF</h2>
+    <div id="records"><p class="hint">अभी कोई रिकॉर्ड सेव नहीं है।</p></div>
+    <p class="hint">हर ग्राहक का रिकॉर्ड और उसकी फोटो इसी फोन के Chrome में सेव रहती हैं। नीचे उसके नाम के सामने “PDF खोलें / सेव करें” दबाकर PDF फिर से बना सकते हैं। PDF को फोन में रखने के लिए प्रिंट स्क्रीन में “Save as PDF” चुनें। Chrome का डेटा साफ करने या फोन बदलने से पहले PDF डाउनलोड करके सुरक्षित रखें।</p>
+  </section>
+</main>
+<button class="fab no-print" id="addFab"><span>📷</span><span>＋</span></button>
+
+<script>
+const photoTypes = [
+ ['aadhaarFront','आधार कार्ड - आगे (वैकल्पिक)'],
+ ['aadhaarBack','आधार कार्ड - पीछे (वैकल्पिक)'],
+ ['front','स्कूटी - सामने'],
+ ['back','स्कूटी - पीछे'],
+ ['left','स्कूटी - बायाँ हिस्सा'],
+ ['right','स्कूटी - दायाँ हिस्सा'],
+ ['batteryPhoto','बैटरी की फोटो']
+];
+const photos = {};
+const $ = id => document.getElementById(id);
+photoTypes.forEach(([id,label])=>{
+ const wrap=document.createElement('div'); wrap.className='field';
+ const lab=document.createElement('label'); lab.htmlFor=id; lab.textContent=label;
+ const input=document.createElement('input'); input.type='file'; input.accept='image/*'; input.id=id;
+ const img=document.createElement('img'); img.className='preview'; img.alt=label;
+ input.addEventListener('change',()=>{
+   const f=input.files && input.files[0]; if(!f){photos[id]=null;img.style.display='none';return}
+   const reader=new FileReader();
+   reader.onload=()=>{photos[id]=reader.result;img.src=reader.result;img.style.display='block'};
+   reader.readAsDataURL(f);
+ });
+ wrap.append(lab,input,img); $('photoFields').append(wrap);
+});
+function readForm(){
+ return {id:Date.now().toString(),name:$('name').value.trim(),mobile:$('mobile').value.trim(),
+ address:$('address').value.trim(),battery:$('battery').value.trim(),vehicle:$('vehicle').value.trim(),
+ photos:{...photos},created:new Date().toLocaleString('en-IN')};
+}
+function valid(r){if(!r.name||!r.mobile||!r.address){$('notice').textContent='कृपया पूरा नाम, मोबाइल नंबर और पता भरें।';return false}return true}
+function getRecords(){try{return JSON.parse(localStorage.getItem('scootyInsuranceRecords')||'[]')}catch(e){return []}}
+function putRecords(a){localStorage.setItem('scootyInsuranceRecords',JSON.stringify(a))}
+function clearForm(){
+ ['name','mobile','address','battery','vehicle'].forEach(id=>$(id).value='');
+ photoTypes.forEach(([id])=>{photos[id]=null;$(id).value='';const im=$(id).parentElement.querySelector('img');im.style.display='none';im.removeAttribute('src')});
+}
+function renderRecords(){
+ const list=getRecords(),root=$('records');root.innerHTML='';
+ if(!list.length){root.innerHTML='<p class="hint">अभी कोई रिकॉर्ड सेव नहीं है।</p>';return}
+ list.slice().reverse().forEach(r=>{
+  const row=document.createElement('div');row.className='record';
+  const info=document.createElement('div');const strong=document.createElement('strong');strong.textContent=r.name;
+  const small=document.createElement('small');small.textContent=r.mobile+' · '+(r.vehicle||'स्कूटी नंबर नहीं दिया');
+  info.append(strong,small);
+  const actions=document.createElement('div');actions.className='actions';
+  const pdf=document.createElement('button');pdf.className='secondary';pdf.textContent='PDF खोलें / सेव करें';pdf.onclick=()=>makePdf(r);
+  const del=document.createElement('button');del.className='danger';del.textContent='हटाएँ';del.onclick=()=>{if(confirm('यह ग्राहक रिकॉर्ड हटाएँ?')){putRecords(getRecords().filter(x=>x.id!==r.id));renderRecords()}};
+  actions.append(pdf,del);row.append(info,actions);root.append(row);
+ });
+}
+$('saveBtn').onclick=()=>{
+ const r=readForm();if(!valid(r))return;
+ try{const all=getRecords();all.push(r);putRecords(all);$('notice').textContent='ग्राहक का रिकॉर्ड इस फोन में सेव हो गया।';renderRecords();clearForm()}
+ catch(e){$('notice').textContent='स्टोरेज भर गया हो सकता है। कम/छोटी फोटो चुनकर फिर कोशिश करें।'}
+};
+$('resetBtn').onclick=()=>{clearForm();$('notice').textContent='फॉर्म साफ कर दिया गया।'};
+$('pdfBtn').onclick=()=>{const r=readForm();if(!valid(r))return;makePdf(r)};
+$('pdfHelpBtn').onclick=()=>{$('pdfHelp').hidden=!$('pdfHelp').hidden;};
+function esc(s){return String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function makePdf(r){
+  const detail=(label,value)=>`<div><b>${esc(label)}:</b> ${esc(value||'—')}</div>`;
+  const photoHtml=photoTypes.filter(([id])=>r.photos&&r.photos[id]).map(([id,label])=>
+    `<figure class="photo"><img src="${r.photos[id]}" alt="${esc(label)}"><figcaption>${esc(label)}</figcaption></figure>`
+  ).join('');
+
+  let paymentProof=null;
+  try {
+    const proofs=JSON.parse(localStorage.getItem('scootyScannerPaymentProofsV1')||'[]');
+    const clean=v=>String(v||'').replace(/\D/g,'');
+    const mobile=clean(r.mobile), name=String(r.name||'').trim().toLowerCase();
+    // Match by mobile first (the most reliable customer identifier); use name only as fallback.
+    paymentProof=(mobile ? proofs.slice().reverse().find(x=>clean(x.mobile)===mobile) : null)
+      || proofs.slice().reverse().find(x=>String(x.name||'').trim().toLowerCase()===name)
+      || null;
+  } catch(e) {}
+
+  const paymentHtml=paymentProof && paymentProof.image
+    ? `<h3>पेमेंट रसीद / Payment Screenshot</h3><section class="photos"><figure class="photo"><img src="${paymentProof.image}" alt="Payment screenshot"><figcaption>UPI भुगतान स्क्रीनशॉट · राशि ₹${esc(paymentProof.amount||4500)} · ${esc(paymentProof.date||'')}</figcaption></figure></section>`
+    : `<h3>पेमेंट रसीद / Payment Screenshot</h3><p>इस ग्राहक का पेमेंट स्क्रीनशॉट सेव नहीं किया गया है।</p>`;
+
+  const printDoc=`<!doctype html><html lang="hi"><head><meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Scooty Insurance - ${esc(r.name)}</title>
+  <style>
+  @page{size:A4 portrait;margin:12mm}
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:#fff;color:#111;font-family:Arial,"Noto Sans Devanagari",sans-serif}
+  body{font-size:11pt;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  h1{text-align:center;font-size:19pt;margin:0 0 3mm}
+  .sub{text-align:center;margin:0 0 7mm;font-size:10pt}
+  h3{font-size:12pt;border-bottom:1px solid #777;padding-bottom:2mm;margin:5mm 0 3mm}
+  .details{display:grid;grid-template-columns:1fr 1fr;gap:3mm 8mm}
+  .details div{padding:2mm 0;border-bottom:1px solid #ddd;overflow-wrap:anywhere;white-space:pre-wrap}
+  .photos{display:grid;grid-template-columns:1fr 1fr;gap:5mm}
+  .photo{break-inside:avoid;margin:0;border:1px solid #ccc;padding:2mm;text-align:center}
+  .photo img{display:block;width:100%;height:62mm;object-fit:contain}
+  figcaption{font-size:9pt;margin-top:1mm}
+  .footer{margin-top:7mm;font-size:9pt;color:#555}
+  .print-actions{margin:12px 0;text-align:center}
+  .print-actions button{padding:10px 18px;font-size:16px}
+  @media screen{body{padding:12mm}.page{max-width:186mm;margin:auto}}
+  @media print{.print-actions{display:none!important}}
+  </style></head><body>
+  <div class="print-actions"><button id="printPdfBtn" onclick="printPdfWhenReady()">PDF सेव / प्रिंट करें</button><span id="printStatus" role="status" style="display:block;margin-top:8px;font-size:13px"></span></div>
+  <article class="page">
+  <h1>SCOOTY INSURANCE</h1><p class="sub">Customer Information Record</p>
+  <h3>ग्राहक की जानकारी / Customer Details</h3>
+  <section class="details">
+  ${detail('पूरा नाम',r.name)}${detail('मोबाइल नंबर',r.mobile)}
+  ${detail('पूरा पता',r.address)}${detail('स्कूटी का 26 नंबर',r.vehicle)}
+  ${detail('बैटरी नंबर',r.battery)}${detail('रिकॉर्ड तारीख',r.created)}
+  </section>
+  <h3>फोटो / Photographs</h3>
+  ${photoHtml?`<section class="photos">${photoHtml}</section>`:'<p>कोई फोटो अपलोड नहीं की गई।</p>'}
+  ${paymentHtml}
+  <p class="footer">यह रिकॉर्ड ग्राहक द्वारा दी गई जानकारी के आधार पर तैयार किया गया है।</p>
+  </article>
+  <script>
+  async function printPdfWhenReady(){
+    const btn=document.getElementById('printPdfBtn'), status=document.getElementById('printStatus');
+    btn.disabled=true; status.textContent='फोटो और पेमेंट स्क्रीनशॉट PDF के लिए तैयार हो रहे हैं…';
+    try{
+      const imgs=Array.from(document.querySelectorAll('article img'));
+      await Promise.all(imgs.map(img=>{
+        if(img.complete && img.naturalWidth>0) return Promise.resolve();
+        return new Promise((resolve,reject)=>{img.onload=resolve;img.onerror=()=>reject(new Error('फोटो लोड नहीं हुई'));});
+      }));
+      if(document.fonts && document.fonts.ready) await document.fonts.ready;
+      status.textContent='सभी फोटो तैयार हैं। अब PDF सेव करें।';
+      setTimeout(()=>window.print(),150);
+    }catch(e){status.textContent='कोई फोटो लोड नहीं हुई। पेज दोबारा खोलकर कोशिश करें।';btn.disabled=false;}
+  }
+  <\/script></body></html>`;
+
+  // Open a real document tab instead of printing a hidden 1px iframe.
+  // This is more reliable in Android Chrome and avoids printing the app's HTML/source.
+  const printWindow=window.open('', '_blank');
+  if(!printWindow){
+    $('notice').textContent='PDF पेज नहीं खुला। Chrome में पॉप-अप की अनुमति दें और फिर PDF बनाएँ।';
+    return;
+  }
+  printWindow.document.open();
+  printWindow.document.write(printDoc);
+  printWindow.document.close();
+  $('notice').textContent='PDF पेज खुल गया है। ऊपर “PDF सेव / प्रिंट करें” दबाएँ और “Save as PDF” चुनें।';
+}
+
+function showView(view){
+ const form=$('customerForm'),dash=$('homeDashboard'),records=$('recordsPanel');
+ if(view==='form'){form.style.display='block';dash.style.display='none';records.style.display='none';$('name').focus()}
+ else if(view==='pdf'){form.style.display='none';dash.style.display='block';records.style.display='block';records.scrollIntoView({behavior:'smooth'})}
+ else {form.style.display='none';dash.style.display='block';records.style.display='block'}
+ document.querySelectorAll('.tabs button').forEach(b=>b.classList.toggle('active',b.dataset.tab===view));
+}
+document.querySelectorAll('.tabs button').forEach(b=>b.addEventListener('click',()=>showView(b.dataset.tab==='aadhaar'?'form':b.dataset.tab)));
+$('addFab').onclick=()=>showView('form');
+$('searchToggle').onclick=()=>{const bar=$('searchBar');bar.style.display=bar.style.display==='block'?'none':'block';if(bar.style.display==='block')$('searchInput').focus()};
+$('searchInput').addEventListener('input',()=>{const q=$('searchInput').value.toLowerCase();document.querySelectorAll('#records .record').forEach(row=>row.style.display=row.textContent.toLowerCase().includes(q)?'flex':'none')});
+document.querySelectorAll('.filters button').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('.filters button').forEach(x=>x.classList.remove('active'));b.classList.add('active');if(b.dataset.filter==='recent')$('recordsPanel').scrollIntoView({behavior:'smooth'})}));
+const originalRenderRecords=renderRecords;
+renderRecords=function(){originalRenderRecords();$('docCount').textContent=getRecords().length};
+renderRecords();
+</script>
+</body>
+</html>

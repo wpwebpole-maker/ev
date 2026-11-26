@@ -1,0 +1,428 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Global default-deny safety net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // --- GLOBAL HELPERS ---
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isBootstrappedSuperAdmin() {
+      return isSignedIn() &&
+        request.auth.token.email in [
+          'suchita9867@gmail.com',
+          'wpwebpole@gmail.com',
+          'vk725846@gmail.com'
+        ] &&
+        request.auth.token.email_verified == true;
+    }
+
+    function isAdmin() {
+      return isBootstrappedSuperAdmin() || (
+        isSignedIn() &&
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.active == true
+      );
+    }
+
+    function isSuperAdmin() {
+      return isBootstrappedSuperAdmin() || (
+        isSignedIn() &&
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.active == true &&
+        get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.role == 'SUPER_ADMIN'
+      );
+    }
+
+    // --- VALIDATION BLUEPRINTS ---
+    function isValidUserProfile(data) {
+      return data.uid is string && data.uid.size() >= 1 && data.uid.size() <= 128 &&
+        data.name is string && data.name.size() >= 1 && data.name.size() <= 120 &&
+        data.email is string && data.email.size() <= 180 &&
+        (!('mobile' in data) || (data.mobile is string && data.mobile.size() <= 20)) &&
+        (!('address' in data) || (data.address is string && data.address.size() <= 400)) &&
+        (!('city' in data) || (data.city is string && data.city.size() <= 80)) &&
+        (!('pinCode' in data) || (data.pinCode is string && data.pinCode.size() <= 12)) &&
+        data.accountStatus in ['ACTIVE', 'DISABLED'] &&
+        data.consentAccepted is bool &&
+        data.createdAt is timestamp && data.createdAt <= request.time &&
+        data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    function isValidAdminRecord(data) {
+      return data.uid is string && data.uid.size() >= 1 && data.uid.size() <= 128 &&
+        data.email is string && data.email.size() >= 3 && data.email.size() <= 180 &&
+        data.name is string && data.name.size() >= 1 && data.name.size() <= 120 &&
+        data.role in ['SUPER_ADMIN', 'APPLICATION_MANAGER', 'PAYMENT_MANAGER', 'DOCUMENT_MANAGER'] &&
+        data.active is bool &&
+        data.createdBy is string && data.createdBy.size() >= 1 && data.createdBy.size() <= 128 &&
+        data.createdAt is timestamp && data.createdAt <= request.time &&
+        data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    function isValidApplication(data) {
+      return data.applicationCode is string && data.applicationCode.size() >= 4 && data.applicationCode.size() <= 40 &&
+        data.customerUid is string && data.customerUid.size() >= 1 && data.customerUid.size() <= 128 &&
+        data.fullName is string && data.fullName.size() >= 1 && data.fullName.size() <= 120 &&
+        data.mobile is string && data.mobile.size() >= 7 && data.mobile.size() <= 20 &&
+        (!('email' in data) || (data.email is string && data.email.size() <= 180)) &&
+        data.address is string && data.address.size() >= 2 && data.address.size() <= 500 &&
+        (!('city' in data) || (data.city is string && data.city.size() <= 80)) &&
+        (!('pinCode' in data) || (data.pinCode is string && data.pinCode.size() <= 12)) &&
+        (!('vehicleBrand' in data) || (data.vehicleBrand is string && data.vehicleBrand.size() <= 80)) &&
+        (!('vehicleModel' in data) || (data.vehicleModel is string && data.vehicleModel.size() <= 80)) &&
+        (!('registrationNumber' in data) || (data.registrationNumber is string && data.registrationNumber.size() <= 60)) &&
+        (!('batteryNumber' in data) || (data.batteryNumber is string && data.batteryNumber.size() <= 80)) &&
+        (!('vehicleNotes' in data) || (data.vehicleNotes is string && data.vehicleNotes.size() <= 400)) &&
+        (!('documentIds' in data) || (data.documentIds is map && data.documentIds.size() <= 12)) &&
+        data.applicationStatus in [
+          'DRAFT', 'SUBMITTED', 'UNDER_REVIEW', 'DOCUMENTS_REQUIRED',
+          'PAYMENT_PENDING', 'PAYMENT_VERIFICATION', 'APPROVED', 'POLICY_ISSUED', 'REJECTED'
+        ] &&
+        data.paymentStatus in ['UNPAID', 'PENDING_VERIFICATION', 'VERIFIED', 'REJECTED'] &&
+        (!('adminRemarks' in data) || (data.adminRemarks is string && data.adminRemarks.size() <= 600)) &&
+        (!('policyNumber' in data) || (data.policyNumber is string && data.policyNumber.size() <= 80)) &&
+        (!('policyDocId' in data) || (data.policyDocId is string && data.policyDocId.size() <= 128)) &&
+        data.createdAt is timestamp && data.createdAt <= request.time &&
+        data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    function isValidApplicationDoc(data) {
+      return data.customerUid is string && data.customerUid.size() >= 1 && data.customerUid.size() <= 128 &&
+        data.applicationId is string && data.applicationId.size() >= 1 && data.applicationId.size() <= 128 &&
+        data.docType in [
+          'AADHAAR_FRONT', 'AADHAAR_BACK', 'SCOOTY_FRONT', 'SCOOTY_BACK',
+          'SCOOTY_LEFT', 'SCOOTY_RIGHT', 'BATTERY_PHOTO', 'PAYMENT_SCREENSHOT', 'POLICY_PDF'
+        ] &&
+        data.fileName is string && data.fileName.size() >= 1 && data.fileName.size() <= 160 &&
+        data.mimeType is string && data.mimeType.size() >= 3 && data.mimeType.size() <= 80 &&
+        data.sizeBytes is int && data.sizeBytes > 0 && data.sizeBytes <= 600000 &&
+        data.payloadBase64 is string && data.payloadBase64.size() >= 10 && data.payloadBase64.size() <= 450000 &&
+        data.createdAt is timestamp && data.createdAt <= request.time;
+    }
+
+    function isValidPayment(data) {
+      return data.applicationId is string && data.applicationId.size() >= 1 && data.applicationId.size() <= 128 &&
+        data.applicationCode is string && data.applicationCode.size() >= 4 && data.applicationCode.size() <= 40 &&
+        data.customerUid is string && data.customerUid.size() >= 1 && data.customerUid.size() <= 128 &&
+        data.customerName is string && data.customerName.size() >= 1 && data.customerName.size() <= 120 &&
+        data.customerMobile is string && data.customerMobile.size() >= 7 && data.customerMobile.size() <= 20 &&
+        data.amount is number && data.amount > 0 && data.amount <= 500000 &&
+        data.upiId is string && data.upiId.size() >= 3 && data.upiId.size() <= 100 &&
+        (!('utrNumber' in data) || (data.utrNumber is string && data.utrNumber.size() <= 60)) &&
+        data.screenshotDocId is string && data.screenshotDocId.size() >= 1 && data.screenshotDocId.size() <= 128 &&
+        data.paymentStatus in ['PENDING_VERIFICATION', 'VERIFIED', 'REJECTED'] &&
+        (!('verificationRemarks' in data) || (data.verificationRemarks is string && data.verificationRemarks.size() <= 500)) &&
+        (!('verifiedBy' in data) || (data.verifiedBy is string && data.verifiedBy.size() <= 180)) &&
+        data.createdAt is timestamp && data.createdAt <= request.time &&
+        data.updatedAt is timestamp && data.updatedAt <= request.time &&
+        (!('verifiedAt' in data) || (data.verifiedAt is timestamp && data.verifiedAt <= request.time));
+    }
+
+    function isValidPolicy(data) {
+      return data.applicationId is string && data.applicationId.size() >= 1 && data.applicationId.size() <= 128 &&
+        data.applicationCode is string && data.applicationCode.size() >= 4 && data.applicationCode.size() <= 40 &&
+        data.customerUid is string && data.customerUid.size() >= 1 && data.customerUid.size() <= 128 &&
+        data.customerName is string && data.customerName.size() >= 1 && data.customerName.size() <= 120 &&
+        data.policyNumber is string && data.policyNumber.size() >= 3 && data.policyNumber.size() <= 80 &&
+        data.policyDocId is string && data.policyDocId.size() >= 1 && data.policyDocId.size() <= 128 &&
+        data.issueDate is string && data.issueDate.size() >= 4 && data.issueDate.size() <= 40 &&
+        data.issuedBy is string && data.issuedBy.size() >= 1 && data.issuedBy.size() <= 180 &&
+        data.createdAt is timestamp && data.createdAt <= request.time;
+    }
+
+    function isValidNotification(data) {
+      return data.recipientUid is string && data.recipientUid.size() >= 1 && data.recipientUid.size() <= 128 &&
+        data.title is string && data.title.size() >= 1 && data.title.size() <= 140 &&
+        data.message is string && data.message.size() >= 1 && data.message.size() <= 600 &&
+        data.type is string && data.type.size() >= 1 && data.type.size() <= 60 &&
+        (!('relatedId' in data) || (data.relatedId is string && data.relatedId.size() <= 128)) &&
+        data.read is bool &&
+        data.createdAt is timestamp && data.createdAt <= request.time;
+    }
+
+    function isValidAppSettings(data) {
+      return data.businessName is string && data.businessName.size() >= 2 && data.businessName.size() <= 120 &&
+        data.contactPhone is string && data.contactPhone.size() >= 7 && data.contactPhone.size() <= 25 &&
+        (!('supportEmail' in data) || (data.supportEmail is string && data.supportEmail.size() <= 180)) &&
+        data.upiId is string && data.upiId.size() >= 3 && data.upiId.size() <= 100 &&
+        data.upiRecipientName is string && data.upiRecipientName.size() >= 2 && data.upiRecipientName.size() <= 100 &&
+        data.defaultAmount is number && data.defaultAmount > 0 && data.defaultAmount <= 500000 &&
+        (!('paymentInstructions' in data) || (data.paymentInstructions is string && data.paymentInstructions.size() <= 600)) &&
+        (!('privacyPolicyUrl' in data) || (data.privacyPolicyUrl is string && data.privacyPolicyUrl.size() <= 300)) &&
+        (!('termsUrl' in data) || (data.termsUrl is string && data.termsUrl.size() <= 300)) &&
+        data.updatedBy is string && data.updatedBy.size() >= 1 && data.updatedBy.size() <= 180 &&
+        data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    function isValidAdminLog(data) {
+      return data.adminUid is string && data.adminUid.size() >= 1 && data.adminUid.size() <= 128 &&
+        data.adminEmail is string && data.adminEmail.size() >= 3 && data.adminEmail.size() <= 180 &&
+        data.action is string && data.action.size() >= 2 && data.action.size() <= 100 &&
+        data.recordId is string && data.recordId.size() >= 1 && data.recordId.size() <= 128 &&
+        (!('details' in data) || (data.details is string && data.details.size() <= 500)) &&
+        data.createdAt is timestamp && data.createdAt <= request.time;
+    }
+
+    // --- 1. USERS ---
+    match /users/{userId} {
+      allow get: if isSignedIn() && isValidId(userId) && (request.auth.uid == userId || isAdmin());
+      allow list: if isAdmin();
+
+      allow create: if isSignedIn() &&
+        isValidId(userId) &&
+        request.auth.uid == userId &&
+        incoming().uid == request.auth.uid &&
+        incoming().accountStatus == 'ACTIVE' &&
+        incoming().keys().hasAll(['uid', 'name', 'email', 'accountStatus', 'consentAccepted', 'createdAt', 'updatedAt']) &&
+        incoming().keys().hasOnly(['uid', 'name', 'email', 'mobile', 'address', 'city', 'pinCode', 'accountStatus', 'consentAccepted', 'createdAt', 'updatedAt']) &&
+        isValidUserProfile(incoming());
+
+      allow update: if isSignedIn() &&
+        isValidId(userId) &&
+        isValidUserProfile(incoming()) &&
+        incoming().uid == existing().uid &&
+        incoming().createdAt == existing().createdAt && (
+          // Action: Customer updates own profile (cannot change accountStatus or email)
+          (request.auth.uid == userId &&
+           incoming().accountStatus == existing().accountStatus &&
+           incoming().diff(existing()).affectedKeys().hasOnly(['name', 'mobile', 'address', 'city', 'pinCode', 'consentAccepted', 'updatedAt'])) ||
+          // Action: Admin updates customer accountStatus or profile
+          (isAdmin() &&
+           incoming().diff(existing()).affectedKeys().hasOnly(['accountStatus', 'name', 'mobile', 'address', 'city', 'pinCode', 'updatedAt']))
+        );
+
+      allow delete: if false;
+    }
+
+    // --- 2. ADMINS (RBAC DIRECTORY) ---
+    match /admins/{adminUid} {
+      allow get: if isSignedIn() && isValidId(adminUid) && (request.auth.uid == adminUid || isAdmin());
+      allow list: if isAdmin();
+
+      allow create: if isSuperAdmin() &&
+        isValidId(adminUid) &&
+        incoming().uid == adminUid &&
+        incoming().keys().hasAll(['uid', 'email', 'name', 'role', 'active', 'createdBy', 'createdAt', 'updatedAt']) &&
+        incoming().keys().hasOnly(['uid', 'email', 'name', 'role', 'active', 'createdBy', 'createdAt', 'updatedAt']) &&
+        isValidAdminRecord(incoming());
+
+      allow update: if isSuperAdmin() &&
+        isValidId(adminUid) &&
+        isValidAdminRecord(incoming()) &&
+        incoming().uid == existing().uid &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().diff(existing()).affectedKeys().hasOnly(['email', 'name', 'role', 'active', 'updatedAt']);
+
+      allow delete: if isSuperAdmin() && isValidId(adminUid);
+    }
+
+    // --- 3. APPLICATIONS ---
+    match /applications/{applicationId} {
+      allow get: if isSignedIn() && isValidId(applicationId) && (existing().customerUid == request.auth.uid || isAdmin());
+      allow list: if isSignedIn() && (resource.data.customerUid == request.auth.uid || isAdmin());
+
+      allow create: if isSignedIn() &&
+        isValidId(applicationId) &&
+        incoming().customerUid == request.auth.uid &&
+        incoming().applicationStatus in ['DRAFT', 'SUBMITTED', 'PAYMENT_PENDING'] &&
+        incoming().paymentStatus == 'UNPAID' &&
+        incoming().keys().hasAll(['applicationCode', 'customerUid', 'fullName', 'mobile', 'address', 'applicationStatus', 'paymentStatus', 'createdAt', 'updatedAt']) &&
+        incoming().keys().hasOnly([
+          'applicationCode', 'customerUid', 'fullName', 'mobile', 'email',
+          'address', 'city', 'pinCode', 'vehicleBrand', 'vehicleModel',
+          'registrationNumber', 'batteryNumber', 'vehicleNotes', 'documentIds',
+          'applicationStatus', 'paymentStatus', 'adminRemarks', 'policyNumber',
+          'policyDocId', 'createdAt', 'updatedAt'
+        ]) &&
+        isValidApplication(incoming());
+
+      allow update: if isSignedIn() &&
+        isValidId(applicationId) &&
+        isValidApplication(incoming()) &&
+        incoming().customerUid == existing().customerUid &&
+        incoming().applicationCode == existing().applicationCode &&
+        incoming().createdAt == existing().createdAt && (
+          // Action: Customer edits non-terminal application or links pending payment proof
+          (existing().customerUid == request.auth.uid &&
+           !(existing().applicationStatus in ['APPROVED', 'POLICY_ISSUED', 'REJECTED']) &&
+           incoming().applicationStatus in ['DRAFT', 'SUBMITTED', 'PAYMENT_PENDING', 'PAYMENT_VERIFICATION'] &&
+           incoming().paymentStatus in ['UNPAID', 'PENDING_VERIFICATION'] &&
+           incoming().diff(existing()).affectedKeys().hasOnly([
+             'fullName', 'mobile', 'email', 'address', 'city', 'pinCode',
+             'vehicleBrand', 'vehicleModel', 'registrationNumber', 'batteryNumber',
+             'vehicleNotes', 'documentIds', 'applicationStatus', 'paymentStatus', 'updatedAt'
+           ])) ||
+          // Action: Admin reviews, changes status, verifies payment, adds remarks, issues policy
+          (isAdmin() &&
+           incoming().diff(existing()).affectedKeys().hasOnly([
+             'applicationStatus', 'paymentStatus', 'adminRemarks',
+             'policyNumber', 'policyDocId', 'documentIds', 'updatedAt'
+           ]))
+        );
+
+      allow delete: if isSignedIn() && isValidId(applicationId) && (
+        (existing().customerUid == request.auth.uid && existing().applicationStatus == 'DRAFT') ||
+        isSuperAdmin()
+      );
+    }
+
+    // --- 4. APPLICATION DOCUMENTS (PRIVATE PHOTOS / AADHAAR / RECEIPTS / POLICIES) ---
+    match /applicationDocs/{docId} {
+      allow get: if isSignedIn() && isValidId(docId) && (existing().customerUid == request.auth.uid || isAdmin());
+      allow list: if isSignedIn() && (resource.data.customerUid == request.auth.uid || isAdmin());
+
+      allow create: if isSignedIn() &&
+        isValidId(docId) &&
+        incoming().keys().hasAll(['customerUid', 'applicationId', 'docType', 'fileName', 'mimeType', 'sizeBytes', 'payloadBase64', 'createdAt']) &&
+        incoming().keys().hasOnly(['customerUid', 'applicationId', 'docType', 'fileName', 'mimeType', 'sizeBytes', 'payloadBase64', 'createdAt']) &&
+        isValidApplicationDoc(incoming()) && (
+          (incoming().customerUid == request.auth.uid && incoming().docType != 'POLICY_PDF') ||
+          isAdmin()
+        );
+
+      allow update: if isSignedIn() &&
+        isValidId(docId) &&
+        isValidApplicationDoc(incoming()) &&
+        incoming().customerUid == existing().customerUid &&
+        incoming().createdAt == existing().createdAt && (
+          (existing().customerUid == request.auth.uid && incoming().docType != 'POLICY_PDF' &&
+           incoming().diff(existing()).affectedKeys().hasOnly(['fileName', 'mimeType', 'sizeBytes', 'payloadBase64'])) ||
+          (isAdmin() &&
+           incoming().diff(existing()).affectedKeys().hasOnly(['fileName', 'mimeType', 'sizeBytes', 'payloadBase64']))
+        );
+
+      allow delete: if isSignedIn() && isValidId(docId) && (
+        (existing().customerUid == request.auth.uid && existing().docType != 'POLICY_PDF') ||
+        isAdmin()
+      );
+    }
+
+    // --- 5. PAYMENTS (MANUAL ADMIN VERIFICATION REQUIRED) ---
+    match /payments/{paymentId} {
+      allow get: if isSignedIn() && isValidId(paymentId) && (existing().customerUid == request.auth.uid || isAdmin());
+      allow list: if isSignedIn() && (resource.data.customerUid == request.auth.uid || isAdmin());
+
+      allow create: if isSignedIn() &&
+        isValidId(paymentId) &&
+        incoming().customerUid == request.auth.uid &&
+        incoming().paymentStatus == 'PENDING_VERIFICATION' &&
+        incoming().keys().hasAll(['applicationId', 'applicationCode', 'customerUid', 'customerName', 'customerMobile', 'amount', 'upiId', 'screenshotDocId', 'paymentStatus', 'createdAt', 'updatedAt']) &&
+        incoming().keys().hasOnly([
+          'applicationId', 'applicationCode', 'customerUid', 'customerName', 'customerMobile',
+          'amount', 'upiId', 'utrNumber', 'screenshotDocId', 'paymentStatus',
+          'verificationRemarks', 'verifiedBy', 'createdAt', 'updatedAt', 'verifiedAt'
+        ]) &&
+        isValidPayment(incoming()) &&
+        exists(/databases/$(database)/documents/applications/$(incoming().applicationId)) &&
+        get(/databases/$(database)/documents/applications/$(incoming().applicationId)).data.customerUid == request.auth.uid;
+
+      allow update: if isAdmin() &&
+        isValidId(paymentId) &&
+        isValidPayment(incoming()) &&
+        incoming().customerUid == existing().customerUid &&
+        incoming().applicationId == existing().applicationId &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().diff(existing()).affectedKeys().hasOnly(['paymentStatus', 'verificationRemarks', 'verifiedBy', 'verifiedAt', 'updatedAt']);
+
+      allow delete: if isSuperAdmin() && isValidId(paymentId);
+    }
+
+    // --- 6. POLICIES (ADMIN-ISSUED ONLY) ---
+    match /policies/{policyId} {
+      allow get: if isSignedIn() && isValidId(policyId) && (existing().customerUid == request.auth.uid || isAdmin());
+      allow list: if isSignedIn() && (resource.data.customerUid == request.auth.uid || isAdmin());
+
+      allow create: if isAdmin() &&
+        isValidId(policyId) &&
+        incoming().keys().hasAll(['applicationId', 'applicationCode', 'customerUid', 'customerName', 'policyNumber', 'policyDocId', 'issueDate', 'issuedBy', 'createdAt']) &&
+        incoming().keys().hasOnly(['applicationId', 'applicationCode', 'customerUid', 'customerName', 'policyNumber', 'policyDocId', 'issueDate', 'issuedBy', 'createdAt']) &&
+        isValidPolicy(incoming()) &&
+        exists(/databases/$(database)/documents/applications/$(incoming().applicationId));
+
+      allow update: if isAdmin() &&
+        isValidId(policyId) &&
+        isValidPolicy(incoming()) &&
+        incoming().customerUid == existing().customerUid &&
+        incoming().applicationId == existing().applicationId &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().diff(existing()).affectedKeys().hasOnly(['policyNumber', 'policyDocId', 'issueDate', 'issuedBy']);
+
+      allow delete: if isSuperAdmin() && isValidId(policyId);
+    }
+
+    // --- 7. NOTIFICATIONS ---
+    match /notifications/{notificationId} {
+      allow get: if isSignedIn() && isValidId(notificationId) && (existing().recipientUid == request.auth.uid || isAdmin());
+      allow list: if isSignedIn() && (resource.data.recipientUid == request.auth.uid || isAdmin());
+
+      allow create: if isSignedIn() &&
+        isValidId(notificationId) &&
+        incoming().keys().hasAll(['recipientUid', 'title', 'message', 'type', 'read', 'createdAt']) &&
+        incoming().keys().hasOnly(['recipientUid', 'title', 'message', 'type', 'relatedId', 'read', 'createdAt']) &&
+        isValidNotification(incoming()) && (
+          incoming().recipientUid == request.auth.uid ||
+          isAdmin()
+        );
+
+      allow update: if isSignedIn() &&
+        isValidId(notificationId) &&
+        isValidNotification(incoming()) &&
+        existing().recipientUid == request.auth.uid &&
+        incoming().recipientUid == existing().recipientUid &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().diff(existing()).affectedKeys().hasOnly(['read']);
+
+      allow delete: if isSignedIn() && isValidId(notificationId) && (existing().recipientUid == request.auth.uid || isAdmin());
+    }
+
+    // --- 8. GLOBAL APP SETTINGS (/settings/appConfig) ---
+    match /settings/{settingId} {
+      allow get: if isSignedIn() && settingId == 'appConfig';
+      allow list: if false;
+
+      allow create, update: if isSuperAdmin() &&
+        settingId == 'appConfig' &&
+        incoming().keys().hasAll(['businessName', 'contactPhone', 'upiId', 'upiRecipientName', 'defaultAmount', 'updatedBy', 'updatedAt']) &&
+        incoming().keys().hasOnly([
+          'businessName', 'contactPhone', 'supportEmail', 'upiId', 'upiRecipientName',
+          'defaultAmount', 'paymentInstructions', 'privacyPolicyUrl', 'termsUrl',
+          'updatedBy', 'updatedAt'
+        ]) &&
+        isValidAppSettings(incoming());
+
+      allow delete: if false;
+    }
+
+    // --- 9. ADMIN AUDIT LOGS (IMMUTABLE) ---
+    match /adminLogs/{logId} {
+      allow get, list: if isAdmin();
+
+      allow create: if isAdmin() &&
+        isValidId(logId) &&
+        incoming().adminUid == request.auth.uid &&
+        incoming().keys().hasAll(['adminUid', 'adminEmail', 'action', 'recordId', 'createdAt']) &&
+        incoming().keys().hasOnly(['adminUid', 'adminEmail', 'action', 'recordId', 'details', 'createdAt']) &&
+        isValidAdminLog(incoming());
+
+      allow update, delete: if false;
+    }
+  }
+}
